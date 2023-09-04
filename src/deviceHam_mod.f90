@@ -34,20 +34,27 @@ implicit none
 private
 
 integer, parameter :: dp=8
-complex(dp),allocatable :: Ham(:)
+complex(dp),allocatable :: Ham(:),S(:)
 integer,allocatable :: row(:),col(:)
 integer :: nnz
 
-public :: deviceHam_load_COOmatrix, deviceHam_build_blocks
+public :: deviceHam_load_COOmatrix, deviceHam_build_blocks, deviceHam_free
 
 
 
 contains
 
+subroutine deviceHam_free()
+  if (allocated(Ham)) deallocate(Ham)
+  if (allocated(S)) deallocate(S)
+  if (allocated(row)) deallocate(row)
+  if (allocated(col)) deallocate(col)
+end subroutine deviceHam_free
 
 
-subroutine deviceHam_load_COOmatrix
-
+subroutine deviceHam_load_COOmatrix(fname,overlap)
+character(len=*), intent(in)        :: fname !! input text file name
+logical, intent(in) :: overlap !! read overlap matrix
 
 end subroutine deviceHam_load_COOmatrix
 

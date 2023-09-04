@@ -2,24 +2,24 @@ MODULE static
 
 IMPLICIT NONE
 
-REAL(8), PARAMETER  :: DIEL_0=8.85418d-14 ! F/cm
+integer, parameter :: dp=8
+complex(dp), parameter :: cone = dcmplx(1.0d0,0.0d0)
+complex(dp), parameter :: czero  = dcmplx(0.0d0,0.0d0)
+complex(dp), parameter :: c1i  = dcmplx(0.0d0,1.0d0)
+real(dp), parameter :: hbar=1.0546d-34 ! m^2 kg / s
+real(dp), parameter :: m0=9.109d-31 ! kg
+real(dp), parameter :: eps0=8.854d-12 ! C/V/m 
+real(dp), parameter :: c0=2.998d8 ! m/s  v light
+real(dp), parameter :: e0=1.6022d-19 ! C electron charge
+REAL(dp), PARAMETER :: pi = 3.14159265359d0
+REAL(dp), PARAMETER :: twopi = 3.14159265359d0*2.0d0
 
-REAL(8), PARAMETER  :: DIEL_METAL=0.0D0
 
-REAL(8), PARAMETER  :: m0=5.6856D-16 !eV s^2 / cm^2   rest mass of electron
-real(8), PARAMETER  :: m0ISO=9.10938D-28   ! gram   rest mass of electron
-real(8), PARAMETER  :: gram2eV=m0/m0ISO    ! eV s^2 / cm^2 / gram
-REAL(8), PARAMETER  :: hbar=6.58211899E-16 !eV s
+REAL(dp), PARAMETER  :: m0_ev=5.6856D-16 !eV s^2 / cm^2   rest mass of electron
+real(dp), PARAMETER  :: kg2eV=m0_ev/m0    ! eV s^2 / cm^2 / gram
+REAL(dp), PARAMETER  :: hbar_ev=6.58211899E-16 !eV s
+REAL(dp), PARAMETER  :: BOLTZ=8.61734d-05 !eV K-1
+real(dp), parameter :: hb2m=7.6305d-16     	 ! eV*cm^2
 
-REAL(8), PARAMETER  :: BOLTZ=8.61734d-05 !eV K-1
-REAL(8), PARAMETER  :: PII=3.14159265d0
-REAL(8), PARAMETER  :: ELCH=1.60217653d-19   ! C
-real(8), PARAMETER  :: v_light=2.998d10      ! cm/s
-
-REAL(8), PARAMETER :: htqm=(hbar)**2/m0		 !/ELCH
-real(8), parameter :: hb2m=7.6305d-16     	 ! eV*cm^2
-
-complex(8), parameter :: alpha = cmplx(1.0d0,0.0d0)
-complex(8), parameter :: beta  = cmplx(0.0d0,0.0d0)
 
 END MODULE static

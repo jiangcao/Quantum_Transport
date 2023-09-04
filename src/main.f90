@@ -26,7 +26,10 @@
 ! POSSIBILITY OF SUCH DAMAGE. 
 !
 PROGRAM main
+
 use negf_mod
+use deviceHam_mod
+
 implicit none
 
 END PROGRAM main
