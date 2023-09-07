@@ -38,7 +38,7 @@ contains
 !!  Recursive Backward Green's solver
     subroutine rgf_variableblock_backward(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
                                           sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
-        use matrix_c, only: type_matrix_complex, MUL_C, triMUL_C, inv => array_inverse, trace_c
+        use matrix_c, only: type_matrix_complex, MUL_C, triMUL_C, inv => array_inverse, trace_c 
         use static
         type(type_matrix_complex), intent(in) :: Hii(:), H1i(:), Sii(:), sigma_lesser_ph(:), sigma_r_ph(:)
         real(8), intent(in)       :: En, mul(:, :), mur(:, :), TEMPr(:, :), TEMPl(:, :)
