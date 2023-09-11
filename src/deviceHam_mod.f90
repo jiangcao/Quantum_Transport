@@ -45,7 +45,7 @@ contains
         integer, intent(out)::nm
         logical, intent(in), optional::use0index, complex
         logical :: l0index
-        real(8) :: re, im
+        real(dp) :: re, im
         integer::handle, io
         integer::M, NL, i, j, k
         handle = 101
@@ -61,10 +61,10 @@ contains
             if (max(i, j) > M) M = max(i, j)
             NL = NL + 1
         end do
-        print '("Number of nonzeros = ",i18)', M
-        allocate (H(M))
-        allocate (row(M))
-        allocate (col(M))
+        print '("Number of nonzeros = ",i18)', NL
+        allocate (H(NL))
+        allocate (row(NL))
+        allocate (col(NL))
         H = 0.0d0
         nnz = NL
         nm = M
@@ -88,8 +88,18 @@ contains
         close (handle)
     end subroutine deviceHam_load_COOmatrix
 
-    subroutine deviceHam_build_blocks()
+
+
+    subroutine deviceHam_build_blocks(H,row,col,Hii,H1i,Slices,nx)
         use matrix_c, only: type_matrix_complex
+        complex(dp),intent(in),dimension(:)::H 
+        integer,intent(in),dimension(:)::row,col
+        type(type_matrix_complex),dimension(:),intent(inout),allocatable::Hii,H1i
+        integer,intent(in),dimension(:,:)::Slices
+        integer,intent(in)::nx
+        ! ----
+        allocate(Hii(nx))
+        allocate(H1i(nx-1))
 
     end subroutine deviceHam_build_blocks
 

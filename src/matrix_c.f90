@@ -88,7 +88,7 @@ module matrix_c
         module procedure array_to_diag
     end interface
 
-    interface trace_c
+    interface trace
         module procedure array_trace, matrix_trace
     end interface
 
@@ -100,9 +100,9 @@ contains
     pure subroutine matrix_alloc(M, n, nn, source)
         implicit none
         type(type_matrix_complex), intent(out) :: M
-        integer, intent(in)                    :: n
-        integer, intent(in), optional          :: nn
-        complex(8), intent(in), optional       :: source(:, :)
+        integer, intent(in):: n
+        integer, intent(in), optional:: nn
+        complex(8), intent(in), optional:: source(:, :)
         if (present(nn)) then
             call matrix_alloc2(M, (/n, nn/), source=source)
         else
@@ -114,8 +114,8 @@ contains
     pure subroutine matrix_alloc2(M, n, source)
         implicit none
         type(type_matrix_complex), intent(out) :: M
-        integer, intent(in)                    :: n(2)
-        complex(8), intent(in), optional       :: source(1:n(1), 1:n(2))
+        integer, intent(in):: n(2)
+        complex(8), intent(in), optional:: source(1:n(1), 1:n(2))
         if (.not. allocated(M%m)) then
             allocate (M%m(n(1), n(2)))
         else
@@ -136,9 +136,9 @@ contains
     ! allocate an array
     pure subroutine array_alloc(M, n, nn)
         implicit none
-        complex(8), intent(out), allocatable   :: M(:, :)
-        integer, intent(in)                    :: n
-        integer, intent(in), optional           :: nn
+        complex(8), intent(out), allocatable:: M(:, :)
+        integer, intent(in):: n
+        integer, intent(in), optional:: nn
         if (present(nn)) then
             call array_alloc2(M, (/n, nn/))
         else
@@ -150,8 +150,8 @@ contains
 !! This function allocates a 2D complex array. If the array is already allocated, this function
 !! will resize the array to the new size. The allocated array is initiated to zero.
         implicit none
-        complex(8), intent(out), allocatable   :: M(:, :)
-        integer, intent(in)                    :: n(2)
+        complex(8), intent(out), allocatable:: M(:, :)
+        integer, intent(in):: n(2)
         if (.not. allocated(M)) then
             allocate (M(n(1), n(2)))
         else
@@ -168,18 +168,18 @@ contains
         implicit none
         integer, intent(in) :: n
         complex(8)::R(n, n)
-        INTEGER   :: ii
+        INTEGER:: ii
         R = dcmplx(0.0d0, 0.0d0)
         forall (ii=1:n) R(ii, ii) = dcmplx(1.0d0, 0.0d0)
     end function array_eye
 
     pure subroutine matrix_list_allocElem(this, nx, nm, nn, source)
         implicit none
-        integer, intent(in)                                                 :: nx
-        integer, intent(in)                                                 :: nm(1:nx)
-        integer, intent(in), optional                            :: nn(1:nx)
-        type(type_matrix_complex), intent(out)             :: this(1:nx)
-        complex(8), intent(in), optional            :: source(:, :, :) !! the source data to put into the matrices
+        integer, intent(in)  :: nx
+        integer, intent(in)  :: nm(1:nx)
+        integer, intent(in), optional:: nn(1:nx)
+        type(type_matrix_complex), intent(out) :: this(1:nx)
+        complex(8), intent(in), optional:: source(:, :, :) !! the source data to put into the matrices
         integer :: ii
         do ii = 1, nx
             if (present(nn)) then
@@ -192,9 +192,9 @@ contains
 
     pure subroutine matrix_list_allocElem2(this, nx, n, source)
         implicit none
-        integer, intent(in)                                                 :: nx, n(2, 1:nx)
-        type(type_matrix_complex), intent(out)             :: this(1:nx)
-        complex(8), intent(in), optional            :: source(:, :, :) !! the source data to put into the matrices
+        integer, intent(in)  :: nx, n(2, 1:nx)
+        type(type_matrix_complex), intent(out) :: this(1:nx)
+        complex(8), intent(in), optional:: source(:, :, :) !! the source data to put into the matrices
         integer :: ii
         do ii = 1, nx
             call matrix_alloc2(this(ii), n(1:2, ii), source=source(:, :, ii))
@@ -212,8 +212,8 @@ contains
     pure function matrix_list_size(list, dim) result(nm)
         implicit none
         type(type_matrix_complex), intent(in) :: list(:)
-        integer, intent(in)                                          :: dim
-        INTEGER                                                           :: nm(size(list))
+        integer, intent(in):: dim
+        INTEGER  :: nm(size(list))
         integer :: ii
         forall (ii=1:size(list)) nm(ii) = list(ii)%size(dim)
     end function matrix_list_size
@@ -221,7 +221,7 @@ contains
     pure function matrix_list_size2(list) result(nm)
         implicit none
         type(type_matrix_complex), intent(in) :: list(:)
-        INTEGER                                                           :: nm(2, size(list))
+        INTEGER  :: nm(2, size(list))
         integer :: ii
         forall (ii=1:size(list)) nm(:, ii) = list(ii)%size(:)
     end function matrix_list_size2
@@ -250,22 +250,26 @@ contains
 
     subroutine matrix_list_print(handle, this)
         implicit none
-        type(type_matrix_complex), intent(in)         :: this(:)
-        integer, intent(in), optional                         :: handle
+        type(type_matrix_complex), intent(in) :: this(:)
+        integer, intent(in), optional:: handle
         integer :: ii, xx, yy
         if (present(handle)) then
-            write (handle, '(A)') "Format XY"
             write (handle, '(1(i8))') size(this)
-                write(handle, '(3(i8),es15.4,es15.4)') (((ii,xx,yy,this(ii)%m(xx,yy),xx=1,size(this(ii)%m,1)),yy=1,size(this(ii)%m,2)),ii=1,size(this))
+            do ii = 1, size(this)
+                write (handle, '(2(i8))') this(ii)%size(:)
+            end do
+            write (handle, '(es15.4,es15.4)') (((this(ii)%m(xx, yy), &
+                                                 xx=1, size(this(ii)%m, 1)), yy=1, size(this(ii)%m, 2)), ii=1, size(this))
         else
-      print '(3(i8),es15.4,es15.4)',(((ii,xx,yy,this(ii)%m(xx,yy),xx=1,size(this(ii)%m,1)),yy=1,size(this(ii)%m,2)),ii=1,size(this))
+            print '(3(i8),es15.4,es15.4)', (((ii, xx, yy, this(ii)%m(xx, yy), &
+                                              xx=1, size(this(ii)%m, 1)), yy=1, size(this(ii)%m, 2)), ii=1, size(this))
         end if
     end subroutine matrix_list_print
 
     subroutine array_print(handle, A)
         implicit none
-        complex(8), intent(in)                                         :: A(:, :)
-        integer, intent(in)                                  :: handle
+        complex(8), intent(in) :: A(:, :)
+        integer, intent(in) :: handle
         integer :: xx, yy
         write (handle, '(2(i8))') size(A, 1), size(A, 2)
         write (handle, '(es15.4,es15.4)') ((A(xx, yy), xx=1, size(A, 1)), yy=1, size(A, 2))
@@ -274,10 +278,10 @@ contains
 
     subroutine matrix_read(handle, A)
         implicit none
-        type(type_matrix_complex), intent(out)   :: A
-        integer, intent(in)                                  :: handle
-        integer    :: xx, yy
-        real(8)    :: re, im
+        type(type_matrix_complex), intent(out):: A
+        integer, intent(in) :: handle
+        integer :: xx, yy
+        real(8) :: re, im
         character(len=100) :: s
         read (handle, *) xx, yy
         call matrix_alloc(A, xx, yy)
@@ -291,7 +295,7 @@ contains
 
     subroutine array_print_on_screen(A)
         implicit none
-        complex(8), intent(in)  :: A(:, :)
+        complex(8), intent(in):: A(:, :)
         integer :: xx, yy
         do xx = 1, size(A, 1)
             print '(10(A,es8.1,",",es8.1,")"))', ("(", A(xx, yy), yy=1, size(A, 2))
@@ -319,33 +323,33 @@ contains
 
     pure function array_times_array_dagger(A, B) result(C)
         implicit none
-        complex(8), intent(in)                        :: A(:, :), B(:, :)
-        complex(8)                                                                        :: C(size(A, 1), size(B, 1))
+        complex(8), intent(in) :: A(:, :), B(:, :)
+        complex(8) :: C(size(A, 1), size(B, 1))
         C = array_times_array(A, B, trA=.false., trB=.true., cjA=.false., cjB=.true.)
     end function array_times_array_dagger
 
     pure function array_dagger_times_array(A, B) result(C)
         implicit none
-        complex(8), intent(in)                        :: A(:, :), B(:, :)
-        complex(8)                                                                        :: C(size(A, 2), size(B, 2))
+        complex(8), intent(in) :: A(:, :), B(:, :)
+        complex(8) :: C(size(A, 2), size(B, 2))
         C = array_times_array(A, B, trA=.true., trB=.false., cjA=.true., cjB=.false.)
     end function array_dagger_times_array
 
     pure function array_times_array(A, B, trA, trB, cjA, cjB) result(C)
         implicit none
-        complex(8), intent(in)                        :: A(:, :), B(:, :)
-        LOGICAL(KIND=4), intent(in)                   :: trA, trB
-        complex(8)                                    :: C(size(A, merge(2, 1, trA)), size(B, merge(1, 2, trB)))
-        LOGICAL(KIND=4), intent(in), optional        :: cjA, cjB
+        complex(8), intent(in) :: A(:, :), B(:, :)
+        LOGICAL(KIND=4), intent(in):: trA, trB
+        complex(8) :: C(size(A, merge(2, 1, trA)), size(B, merge(1, 2, trB)))
+        LOGICAL(KIND=4), intent(in), optional:: cjA, cjB
         integer :: lda, ldb, k, m, kb, n
         character :: ctrA, ctrB
         interface
             pure subroutine ZGEMM(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-                COMPLEX(8), intent(in)                         :: ALPHA, BETA
-                INTEGER, intent(in)                                 :: K, LDA, LDB, LDC, M, N
-                CHARACTER, intent(in)                         :: TRANSA, TRANSB
-                COMPLEX(8), intent(in)                         :: A(lda, *), B(ldb, *)
-                COMPLEX(8), intent(inout)                 :: C(ldc, *)
+                COMPLEX(8), intent(in):: ALPHA, BETA
+                INTEGER, intent(in):: K, LDA, LDB, LDC, M, N
+                CHARACTER, intent(in):: TRANSA, TRANSB
+                COMPLEX(8), intent(in):: A(lda, *), B(ldb, *)
+                COMPLEX(8), intent(inout):: C(ldc, *)
             end subroutine ZGEMM
         end interface
         lda = size(A, 1)
@@ -381,17 +385,17 @@ contains
 
     pure function array_times_array_simple(A, B) result(C)
         implicit none
-        complex(8), intent(in)                                :: A(:, :), B(:, :)
-        complex(8)                                                                :: C(size(A, 1), size(B, 2))
+        complex(8), intent(in) :: A(:, :), B(:, :)
+        complex(8) :: C(size(A, 1), size(B, 2))
         C = array_times_array(A, B, .false., .false.)
     end function array_times_array_simple
 
     function array_power(A, n) result(C)
         implicit none
-        complex(8), intent(in)                                   :: A(:, :)
-        integer, intent(in)                                  :: n
-        complex(8)                                              :: B(size(A, 1), size(A, 1))
-        complex(8)                                                          :: C(size(A, 1), size(A, 1))
+        complex(8), intent(in):: A(:, :)
+        integer, intent(in) :: n
+        complex(8) :: B(size(A, 1), size(A, 1))
+        complex(8) :: C(size(A, 1), size(A, 1))
         integer :: ii
         if (n > 0) then
             B = A
@@ -416,8 +420,8 @@ contains
     pure function array_transpose(A, t) result(C)
         implicit none
         complex(8), intent(in) :: A(:, :)
-        character, intent(in)  :: t
-        complex(8)             :: C(size(A, 2), size(A, 1))
+        character, intent(in):: t
+        complex(8) :: C(size(A, 2), size(A, 1))
         if ((t == 't') .or. (t == 'T')) then
             C = Transpose(A)
         elseif ((t == 'c') .or. (t == 'C')) then
@@ -427,16 +431,16 @@ contains
 
     function array_eigen(A, B, eigvec, itype, uplo) result(eig)
         implicit none
-        complex(8), intent(in)                                :: A(:, :)
-        complex(8), intent(in), optional        :: B(:, :)
-        real(8)                                                                :: eig(size(A, 1))
-        complex(8), intent(inout), optional         :: eigvec(size(A, 1), size(A, 2))
-        integer, intent(in), optional                 :: itype
-        CHARACTER, intent(in), optional                 :: uplo
-        integer                 :: LDA, N, LDB, lwork, INFO, itypeop
-        CHARACTER                 :: jobz, uploop
-        real(8)                          :: RWORK(3*size(A, 2))
-        complex(8)            :: work(1 + 4*size(A, 2) + size(A, 2)**2), C(size(A, 1), size(A, 2))
+        complex(8), intent(in) :: A(:, :)
+        complex(8), intent(in), optional:: B(:, :)
+        real(8) :: eig(size(A, 1))
+        complex(8), intent(inout), optional :: eigvec(size(A, 1), size(A, 2))
+        integer, intent(in), optional:: itype
+        CHARACTER, intent(in), optional:: uplo
+        integer:: LDA, N, LDB, lwork, INFO, itypeop
+        CHARACTER:: jobz, uploop
+        real(8):: RWORK(3*size(A, 2))
+        complex(8):: work(1 + 4*size(A, 2) + size(A, 2)**2), C(size(A, 1), size(A, 2))
         C(:, :) = A(:, :)
         if (present(eigvec)) then
             jobz = 'V'
@@ -468,8 +472,8 @@ contains
 
     pure function array_to_diag(A) result(diag)
         implicit none
-        complex(8), intent(in)                 :: A(:, :)
-        complex(8)                             :: diag(size(A, 1))
+        complex(8), intent(in):: A(:, :)
+        complex(8) :: diag(size(A, 1))
         integer :: ii
         do concurrent(ii=1:size(A, 1))
             diag(ii) = A(ii, ii)
@@ -478,12 +482,12 @@ contains
 
     function array_inverse2(A, UPLO)  ! for Hermitian matrix
         implicit none
-        complex(8), intent(in)                :: A(:, :)
-        complex(8)                            :: array_inverse2(size(A, dim=1), size(A, dim=1))
-        CHARACTER, intent(in)                 :: UPLO
-        integer         :: info, lda, lwork, n, nnz
-        integer         :: ipiv(size(A, 1))
-        complex(8), allocatable         :: work(:, :)
+        complex(8), intent(in) :: A(:, :)
+        complex(8):: array_inverse2(size(A, dim=1), size(A, dim=1))
+        CHARACTER, intent(in):: UPLO
+        integer :: info, lda, lwork, n, nnz
+        integer :: ipiv(size(A, 1))
+        complex(8), allocatable :: work(:, :)
         n = size(A, 1)
         if (n /= size(A, 2)) then
             print *, '@array_inverse, size not square', n, size(A, 2)
@@ -506,11 +510,11 @@ contains
 
     function array_inverse(A) ! for General matrix
         implicit none
-        complex(8), intent(in)                :: A(:, :)
-        integer         :: info, n
-        integer         :: ipiv(size(A, 1))
+        complex(8), intent(in) :: A(:, :)
+        integer :: info, n
+        integer :: ipiv(size(A, 1))
         complex(8), dimension(size(A, dim=1), size(A, dim=1)) :: array_inverse
-        complex(8), allocatable         :: work(:, :)
+        complex(8), allocatable :: work(:, :)
         n = size(A, 1)
         if (n /= size(A, 2)) then
             print *, '@array_inverse, size not square', n, size(A, 2)
@@ -532,8 +536,8 @@ contains
 
     pure function array_trace(A) result(tr)
         implicit none
-        complex(8), intent(in)                :: A(:, :)
-        complex(8)                                        :: tr
+        complex(8), intent(in) :: A(:, :)
+        complex(8):: tr
         integer :: ii
         tr = sum((/(A(ii, ii), ii=1, size(A, 1))/))
     end function array_trace
@@ -541,15 +545,15 @@ contains
     elemental function matrix_trace(M) result(tr)
         implicit none
         type(type_matrix_complex), intent(in) :: M
-        complex(8)                                        :: tr
+        complex(8):: tr
         integer :: ii
-        tr = sum((/(M%m(ii, ii), ii=1, size(M%m, 1))/))
+        tr = sum((/(M%m(ii, ii), ii=1, M%size(1))/))
     end function matrix_trace
 
     subroutine matrix_copy(matrices, tab)
         implicit none
         type(type_matrix_complex), intent(in) :: matrices(:)
-        complex(8), intent(out)               :: tab(:, :, :)
+        complex(8), intent(out):: tab(:, :, :)
         integer :: i
         do concurrent(i=1:size(matrices))
             tab(1:matrices(i)%size(1), 1:matrices(i)%size(2), i) = matrices(i)%m(:, :)
@@ -562,11 +566,13 @@ contains
         character, intent(in) :: trA, trB, trC
         complex(8), allocatable, dimension(:, :) :: tmp
         integer :: n, m, k, kb
-   if ((trA .ne. 'n') .and. (trA .ne. 'N') .and. (trA .ne. 't') .and. (trA .ne. 'T') .and. (trA .ne. 'c') .and. (trA .ne. 'C')) then
+        if ((trA .ne. 'n') .and. (trA .ne. 'N') .and. (trA .ne. 't') .and. (trA .ne. 'T') &
+            .and. (trA .ne. 'c') .and. (trA .ne. 'C')) then
             write (*, *) "ERROR in triMUL_C! trA is wrong: ", trA
             call abort()
         end if
-   if ((trB .ne. 'n') .and. (trB .ne. 'N') .and. (trB .ne. 't') .and. (trB .ne. 'T') .and. (trB .ne. 'c') .and. (trB .ne. 'C')) then
+        if ((trB .ne. 'n') .and. (trB .ne. 'N') .and. (trB .ne. 't') .and. (trB .ne. 'T') &
+            .and. (trB .ne. 'c') .and. (trB .ne. 'C')) then
             write (*, *) "ERROR in triMUL_C! trB is wrong: ", trB
             call abort()
         end if
@@ -598,11 +604,13 @@ contains
         complex(8), intent(inout), allocatable :: R(:, :)
         CHARACTER, intent(in) :: trA, trB
         integer :: n, m, k, kb, lda, ldb
-   if ((trA .ne. 'n') .and. (trA .ne. 'N') .and. (trA .ne. 't') .and. (trA .ne. 'T') .and. (trA .ne. 'c') .and. (trA .ne. 'C')) then
+        if ((trA .ne. 'n') .and. (trA .ne. 'N') .and. (trA .ne. 't') .and. (trA .ne. 'T') &
+            .and. (trA .ne. 'c') .and. (trA .ne. 'C')) then
             write (*, *) "ERROR in MUL_C! trA is wrong: ", trA
             call abort()
         end if
-   if ((trB .ne. 'n') .and. (trB .ne. 'N') .and. (trB .ne. 't') .and. (trB .ne. 'T') .and. (trB .ne. 'c') .and. (trB .ne. 'C')) then
+        if ((trB .ne. 'n') .and. (trB .ne. 'N') .and. (trB .ne. 't') .and. (trB .ne. 'T') &
+            .and. (trB .ne. 'c') .and. (trB .ne. 'C')) then
             write (*, *) "ERROR in MUL_C! trB is wrong: ", trB
             call abort()
         end if

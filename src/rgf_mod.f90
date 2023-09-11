@@ -24,12 +24,16 @@
 ! CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ! ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ! POSSIBILITY OF SUCH DAMAGE.
-
+!
+! AUTHOR: Jiang Cao
+!
 module rgf_mod
 
     implicit none
 
     private
+
+    integer, parameter :: dp = 8
 
     public :: rgf_variableblock_backward
 
@@ -38,20 +42,18 @@ contains
 !!  Recursive Backward Green's solver
     subroutine rgf_variableblock_backward(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
                                           sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
-        use matrix_c, only: type_matrix_complex, MUL_C, triMUL_C, inv => array_inverse, trace_c 
+        use matrix_c, only: type_matrix_complex, MUL_C, triMUL_C, inv => array_inverse, trace
         use static
         type(type_matrix_complex), intent(in) :: Hii(:), H1i(:), Sii(:), sigma_lesser_ph(:), sigma_r_ph(:)
-        real(8), intent(in)       :: En, mul(:, :), mur(:, :), TEMPr(:, :), TEMPl(:, :)
+        real(dp), intent(in)       :: En, mul(:, :), mur(:, :), TEMPr(:, :), TEMPl(:, :)
         type(type_matrix_complex), intent(inout):: G_greater(:), G_lesser(:), G_r(:), Jdens(:), Gl(:), Gln(:)
-        real(8), intent(out)      :: tr, tre
+        real(dp), intent(out)      :: tr, tre
         !---- local variables
         integer    :: nx, M, ii, jj
-        complex(8) :: z
-        real(8)    :: tim
-        complex(8), allocatable :: sig(:, :), H00(:, :), H10(:, :)
-        complex(8), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)
-        complex(8), parameter :: alpha = cmplx(1.0d0, 0.0d0)
-        complex(8), parameter :: beta = cmplx(0.0d0, 0.0d0)
+        complex(dp) :: z
+        real(dp)    :: tim
+        complex(dp), allocatable :: sig(:, :), H00(:, :), H10(:, :)
+        complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)        
         nx = size(Hii)           ! <- lenght of the device
         z = dcmplx(En, 0.0d0)
         !
@@ -71,10 +73,10 @@ contains
         call sancho(M, En, Sii(ii)%m, H00, H1i(ii + 1)%m, G00, GBB)
         !$omp critical
         open (unit=10, file='sancho_g00.dat', position='append')
-        write (10, *) En, 2, -aimag(trace_c(G00))
+        write (10, *) En, 2, -aimag(trace(G00))
         close (10)
         open (unit=10, file='sancho_gbb.dat', position='append')
-        write (10, *) En, 2, -aimag(trace_c(Gbb))
+        write (10, *) En, 2, -aimag(trace(Gbb))
         close (10)
         !$omp end critical
         !
@@ -142,10 +144,10 @@ contains
         !
         !$omp critical
         open (unit=10, file='sancho_g00.dat', position='append')
-        write (10, *) En, 1, -aimag(trace_c(G00))
+        write (10, *) En, 1, -aimag(trace(G00))
         close (10)
         open (unit=10, file='sancho_gbb.dat', position='append')
-        write (10, *) En, 1, -aimag(trace_c(Gbb))
+        write (10, *) En, 1, -aimag(trace(Gbb))
         close (10)
         !$omp end critical
         !
@@ -239,8 +241,8 @@ contains
 
 !!  Fermi distribution function
     elemental Function ferm(a)
-        Real(8), intent(in) ::  a
-        real(8) :: ferm
+        Real(dp), intent(in) ::  a
+        real(dp) :: ferm
         ferm = 1.0d0/(1.0d0 + Exp(a))
     End Function ferm
 
@@ -248,16 +250,16 @@ contains
     subroutine sancho(nm, E, S00, H00, H10, G00, GBB)
       use linalg, only : invert
         integer i, j, k, nm, nmax
-        COMPLEX(8) :: z
-        real(8) :: E, error
-        REAL(8) :: TOL = 1.0D-100  ! [eV]
-        COMPLEX(8), INTENT(IN) ::  S00(nm, nm), H00(nm, nm), H10(nm, nm)
-        COMPLEX(8), INTENT(OUT) :: G00(nm, nm), GBB(nm, nm)
-        COMPLEX(8), ALLOCATABLE :: A(:, :), B(:, :), C(:, :), tmp(:, :)
-        COMPLEX(8), ALLOCATABLE :: H_BB(:, :), H_SS(:, :), H_01(:, :), H_10(:, :), Id(:, :)
-        COMPLEX(8), EXTERNAL :: ZLANGE
-        complex(8), parameter :: alpha = cmplx(1.0d0, 0.0d0)
-        complex(8), parameter :: beta = cmplx(0.0d0, 0.0d0)
+        COMPLEX(dp) :: z
+        real(dp) :: E, error
+        REAL(dp) :: TOL = 1.0D-100  ! [eV]
+        COMPLEX(dp), INTENT(IN) ::  S00(nm, nm), H00(nm, nm), H10(nm, nm)
+        COMPLEX(dp), INTENT(OUT) :: G00(nm, nm), GBB(nm, nm)
+        COMPLEX(dp), ALLOCATABLE :: A(:, :), B(:, :), C(:, :), tmp(:, :)
+        COMPLEX(dp), ALLOCATABLE :: H_BB(:, :), H_SS(:, :), H_01(:, :), H_10(:, :), Id(:, :)
+        COMPLEX(dp), EXTERNAL :: ZLANGE
+        complex(dp), parameter :: alpha = cmplx(1.0d0, 0.0d0)
+        complex(dp), parameter :: beta = cmplx(0.0d0, 0.0d0)
         !
         Allocate (H_BB(nm, nm))
         Allocate (H_SS(nm, nm))

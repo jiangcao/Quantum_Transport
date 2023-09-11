@@ -30,8 +30,6 @@ module negf_mod
 use linalg
 use static
 use rgf_mod
-use matrix_mod, only : cMatrix, MUL_C, triMUL_c, size_cMatrix, trace_c, &
-                    & invert_c, alloc2_cmatrix, free2_cmatrix, init2_cmatrix, alloc_cmatrix
 
 implicit none
 

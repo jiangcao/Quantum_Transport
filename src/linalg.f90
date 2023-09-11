@@ -75,7 +75,7 @@ CONTAINS
         call zgbtrf(nn, nn, nb, nb, A, lda, ipiv, info)
         if (info .ne. 0) then
             print *, 'SEVERE warning: zgbtrf failed, info=', info
-            call abort
+            call abort()
         end if
         ldb = 1
         allocate (B(ldb, nn))
@@ -87,7 +87,7 @@ CONTAINS
             call zgbtrs('N', nn, nb, nb, nrhs, A, lda, ipiv, B, ldb, info)
             if (info .ne. 0) then
                 print *, 'SEVERE warning: zgbtrs failed, info=', info
-                call abort
+                call abort()
             end if
             X(1:nb*2 + 1, i) = B(1, i - nb:i + nb)
         end do
@@ -125,7 +125,7 @@ CONTAINS
         deallocate (work, rwork)
         if (INFO .ne. 0) then
             write (*, *) 'SEVERE WARNING: ZHEEV HAS FAILED. INFO=', INFO
-            call abort
+            call abort()
         end if
         eig(:) = W(:)
     END FUNCTION eig
