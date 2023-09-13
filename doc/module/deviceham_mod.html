@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 5.0% of total for modules and submodules.">66 statements</a>
+               title=" 3.5% of total for modules and submodules.">68 statements</a>
           </li>
 
             <li id="source-file">
@@ -148,7 +148,6 @@
       <div id="subs-0" class="panel-collapse collapse">
         <div class="list-group">
             <a class="list-group-item" href="../module/deviceham_mod.html#proc-deviceham_load_coomatrix">deviceHam_load_COOmatrix</a>
-            <a class="list-group-item" href="../module/deviceham_mod.html#proc-deviceham_build_blocks">deviceHam_build_blocks</a>
         </div>
       </div>
     </div>
@@ -307,7 +306,6 @@ modules which it uses.
       <div id="subs-1" class="panel-collapse collapse">
         <div class="list-group">
             <a class="list-group-item" href="../module/deviceham_mod.html#proc-deviceham_load_coomatrix">deviceHam_load_COOmatrix</a>
-            <a class="list-group-item" href="../module/deviceham_mod.html#proc-deviceham_build_blocks">deviceHam_build_blocks</a>
         </div>
       </div>
     </div>
@@ -468,166 +466,6 @@ modules which it uses.
             <td><strong>complex</strong></td>
             <td>
 
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-              <div class="panel panel-default">
-    <div class="panel-heading codesum"><span class="anchor" id="proc-deviceham_build_blocks"></span><h3>public  subroutine <a href='../proc/deviceham_build_blocks.html'>deviceHam_build_blocks</a>(H, row, col, Hii, H1i, Slices, ext_left, ext_right, num_slice)  
-</h3></div>
-    <div class="panel-body">
-          
-  
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th>Type</th>
-<th>Intent</th><th>Optional</th>        <th>Attributes</th>
-        <th></th>
-        <th>Name</th>
-        <th></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              complex(kind=dp),
-            </td>
-<td>intent(in),</td>
-              <td></td>            <td>
-              dimension(:)
-            </td>
-            <td>::</td>
-            <td><strong>H</strong></td>
-            <td>
-<p>Hamiltonian matrix value in COO</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td></td>            <td>
-              dimension(:)
-            </td>
-            <td>::</td>
-            <td><strong>row</strong></td>
-            <td>
-<p>Hamiltonian matrix index in COO</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td></td>            <td>
-              dimension(:)
-            </td>
-            <td>::</td>
-            <td><strong>col</strong></td>
-            <td>
-<p>Hamiltonian matrix index in COO</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
-            </td>
-<td>intent(inout),</td>
-              <td></td>            <td>
-              dimension(:), allocatable
-            </td>
-            <td>::</td>
-            <td><strong>Hii</strong></td>
-            <td>
-<p>Hamiltonian blocks</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
-            </td>
-<td>intent(inout),</td>
-              <td></td>            <td>
-              dimension(:), allocatable
-            </td>
-            <td>::</td>
-            <td><strong>H1i</strong></td>
-            <td>
-<p>Hamiltonian blocks</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td></td>            <td>
-              dimension(:, :)
-            </td>
-            <td>::</td>
-            <td><strong>Slices</strong></td>
-            <td>
-<p>slicing information , refer to <a href="../module/graph_partition.html">graph_partition</a></p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>ext_left</strong></td>
-            <td>
-<p>extension on left/right side, number of slices in the central part</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>ext_right</strong></td>
-            <td>
-<p>extension on left/right side, number of slices in the central part</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>num_slice</strong></td>
-            <td>
-<p>extension on left/right side, number of slices in the central part</p>
             </td>
         </tr>
     </tbody>

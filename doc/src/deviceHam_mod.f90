@@ -88,18 +88,20 @@ contains
         close (handle)
     end subroutine deviceHam_load_COOmatrix
 
-    subroutine deviceHam_build_blocks(H, row, col, Hii, H1i, Slices, ext_left, ext_right, num_slice)
+    subroutine deviceHam_build_blocks_fromCOOfile(fname, Hii, H1i, ext_left, ext_right, num_slice)
         use matrix_c, only: type_matrix_complex
-        complex(dp), intent(in), dimension(:)::H !! Hamiltonian matrix value in COO
-        integer, intent(in), dimension(:)::row, col !! Hamiltonian matrix index in COO
-        integer, intent(in)::ext_left, ext_right, num_slice !! extension on left/right side, number of slices in the central part
-        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
-        integer, intent(in), dimension(:, :)::Slices !! slicing information , refer to [[graph_partition]]
+        character(len=*), intent(in)        :: fname !! input text file name
+        integer, intent(in)::ext_left, ext_right!! extension on left/right side, 
+        integer,intent(out):: num_slice !!number of slices in the central part
+        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks        
         ! ----
         integer::nx
+        complex(dp), allocatable, dimension(:)::H !! Hamiltonian matrix value in COO
+        integer, allocatable, dimension(:)::row, col !! Hamiltonian matrix index in COO
+        integer,allocatable,dimension(:,:)::Slices !! slicing information , refer to [[graph_partition]]
         allocate (Hii(nx))
         allocate (H1i(nx - 1))
 
-    end subroutine deviceHam_build_blocks
+    end subroutine deviceHam_build_blocks_fromCOOfile
 
 end module deviceHam_mod
