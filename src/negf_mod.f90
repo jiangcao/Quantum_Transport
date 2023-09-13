@@ -53,7 +53,7 @@ contains
         integer::nm
         real(dp)::en
         real(dp),dimension(:,:),allocatable::mul,mur,templ,tempr
-        type(type_matrix_complex),dimension(:),allocatable::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
+        type(type_matrix_complex),dimension(nx)::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
         real(dp)::tr,tre
         en = 0.0d0 
         nm=size(Hii(1)%m,1)
@@ -62,16 +62,6 @@ contains
         nm=size(Hii(nx)%m,1)
         allocate(mur(nm,nm))
         allocate(tempr(nm,nm))
-
-        print *, sizeof(Hii)
-        allocate(sigma_lesser_ph(nx))
-        allocate(sigma_r_ph(nx))
-        allocate(G_r(nx))
-        allocate(G_lesser(nx))
-        allocate(G_greater(nx))
-        allocate(Jdens(nx))
-        allocate(Gl(nx))
-        allocate(Gln(nx))
 
         call malloc(sigma_lesser_ph,nx, sizeof(Hii))
         call malloc(sigma_r_ph,nx, sizeof(Hii))

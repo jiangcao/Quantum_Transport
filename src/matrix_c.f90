@@ -205,7 +205,11 @@ contains
         complex(8), intent(in), optional:: source(:, :, :) !! the source data to put into the matrices
         integer :: ii
         do ii = 1, nx
-            call matrix_alloc2(this(ii), n(1:2, ii), source=source(:, :, ii))
+            if (present(source)) then
+                call matrix_alloc2(this(ii), n(1:2, ii), source=source(:, :, ii))
+            else
+                call matrix_alloc2(this(ii), n(1:2, ii))
+            endif
         end do
     end subroutine matrix_list_allocElem2
 
