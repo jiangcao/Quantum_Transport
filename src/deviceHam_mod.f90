@@ -134,9 +134,14 @@ contains
         kz = 0.0d0
         call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
         call w90_free_memory()
-        call malloc(Hii, nx, nmm)        
-        call malloc(Sii, nx, nmm)
+
+        allocate(Hii(nx))
+        allocate(H1i(nx+1))
+        allocate(Sii(nx))
+        call malloc(Hii, nx, nmm(1:nx))        
+        call malloc(Sii, nx, nmm(1:nx))
         call malloc(H1i, nx+1, nmm)
+
         do i = 1, nx
             Hii(i)%m = H00
             H1i(i)%m = H10

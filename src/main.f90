@@ -36,7 +36,24 @@ PROGRAM main
     type(type_matrix_complex), allocatable, dimension(:)::Hii, H1i, Sii
     integer::nx, ns
 
+    ! MPI variables
+    integer ( kind = 4 ) ierr
+    integer ( kind = 4 ) comm_size
+    integer ( kind = 4 ) comm_rank
+    integer ( kind = 4 ) local_Nkz
+    integer ( kind = 4 ) local_Nky
+    integer ( kind = 4 ) local_NE
+    integer ( kind = 4 ) first_local_energy
+
+
+    include "mpif.h"
+    call MPI_Init(ierr)
+
+    nx = 5
+    ns = 3
+
     call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns)
+    print *,"solve"
     call negf_solve(nx, Hii, H1i, Sii)
 
     call free(Hii)

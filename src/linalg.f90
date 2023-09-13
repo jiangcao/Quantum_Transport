@@ -27,13 +27,13 @@
 !
 module linalg
 
-    use static
-
     implicit none
 
     private
+    integer, parameter :: dp = 8
+    complex(dp), parameter :: czero = dcmplx(0.0d0, 0.0d0)
 
-    public :: invert, invert_banded, cross, eig, eigv, eigv_feast
+    public :: invert, invert_banded, cross, eig, eigv
 
 CONTAINS
 
@@ -129,40 +129,6 @@ CONTAINS
         end if
         eig(:) = W(:)
     END FUNCTION eig
-
-    ! calculate all eigen-values and eigen-vectors of a Hermitian matrix A
-    !   within a given search interval, a wrapper to the FEAST function in MKL https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-fortran/2023-1/feast-syev-feast-heev.html
-    !   upon return A(:,1:m) will be modified and contains the eigen-vectors
-    FUNCTION eigv_feast(NN, A, emin, emax, m)
-        include 'mkl.fi'
-        INTEGER, INTENT(IN) :: NN
-        COMPLEX(8), INTENT(INOUT), DIMENSION(:, :) :: A
-        REAL(8), INTENT(IN) :: emin, emax ! lower and upper bounds of the interval to be searched for eigenvalues
-        REAL(8) :: eigv_feast(NN)
-        integer, intent(out) :: m ! total number of eigenvalues found
-        ! -----
-        real(8) :: epsout
-        integer :: fpm(128), m0, loop, info
-        complex(8), allocatable :: x(:, :)
-        real(8), allocatable :: w(:), res(:)
-        m0 = max(nn/10, 1000)
-        allocate (x(nn, m0))
-        allocate (w(m0))
-        allocate (res(m0))
-        !
-        call feastinit(fpm)
-        fpm(1) = 1 ! print runtime status to the screen
-        !
-        call zfeast_heev('U', nn, A, nn, fpm, epsout, loop, emin, emax, m0, W, x, m, res, info)
-        !
-        if (INFO .ne. 0) then
-            write (*, *) 'SEVERE WARNING: zfeast_heev HAS FAILED. INFO=', INFO
-            call abort()
-        end if
-        eigv_feast(1:m) = W(1:m)
-        A(:, 1:m) = x(:, 1:m)
-        deallocate (x, w, res)
-    END FUNCTION eigv_feast
 
     ! calculate eigen-values and eigen-vectors of a Hermitian matrix A
     !   upon return A will be modified and contains the eigen-vectors

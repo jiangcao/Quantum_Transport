@@ -35,6 +35,7 @@ module rgf_mod
     private
 
     integer, parameter :: dp = 8
+    REAL(dp), PARAMETER  :: BOLTZ = 8.61734d-05 !eV K-1
 
     public :: rgf_variableblock_backward
 
@@ -44,7 +45,6 @@ contains
     subroutine rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
                                           sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
         use matrix_c, only: type_matrix_complex, MUL_C, triMUL_C, inv => array_inverse, trace
-        use static
         type(type_matrix_complex), intent(in) :: Hii(nx), H1i(nx+1), Sii(nx), sigma_lesser_ph(nx), sigma_r_ph(nx)
         real(dp), intent(in)       :: En, mul(:, :), mur(:, :), TEMPr(:, :), TEMPl(:, :)
         integer,intent(in) :: nx !! lenght of the device
@@ -249,7 +249,7 @@ contains
 
 !!  Sancho-Rubio
     subroutine sancho(nm, E, S00, H00, H10, G00, GBB)
-        use linalg, only: invert
+        use linalg, only : invert
         integer i, j, k, nm, nmax
         COMPLEX(dp) :: z
         real(dp) :: E, error
