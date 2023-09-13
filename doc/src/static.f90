@@ -1,4 +1,5 @@
 MODULE static
+    !! constants
 
     IMPLICIT NONE
 

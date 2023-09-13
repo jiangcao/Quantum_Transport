@@ -28,6 +28,7 @@
 ! AUTHOR: Jiang Cao
 !
 MODULE wannierHam3d
+    !! Wannier-related functions 
 
     IMPLICIT NONE
 

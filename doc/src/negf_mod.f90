@@ -26,8 +26,8 @@
 ! POSSIBILITY OF SUCH DAMAGE.
 !
 module negf_mod
+    !! Non-equilibrium Green's function (NEGF) module, upper-level driver for solving the NEGF equations
 
-    use matrix_c, only: type_matrix_complex
 
     implicit none
 
@@ -40,6 +40,7 @@ module negf_mod
 contains
 
     subroutine negf_solve(nx, Hii, H1i, Sii)
+        use matrix_c, only: type_matrix_complex,malloc,free,sizeof
         use rgf_mod, only: rgf_variableblock_backward
         type(type_matrix_complex), intent(in), dimension(nx)::Hii,Sii
         type(type_matrix_complex), intent(in), dimension(nx+1)::H1i
@@ -49,13 +50,42 @@ contains
         real(dp),allocatable,dimension(:):: mu !! chemical potentials
         real(dp)::emin,emax !! min and max energy range        
         integer:: nen !! number of energy points
+        integer::nm
         real(dp)::en
         real(dp),dimension(:,:),allocatable::mul,mur,templ,tempr
-        type(type_matrix_complex),dimension(:),allocatable::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
+        type(type_matrix_complex),dimension(nx)::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
         real(dp)::tr,tre
         en = 0.0d0 
-        call rgf_variableblock_backward(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
-                                        sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
+        nm=size(Hii(1)%m,1)
+        allocate(mul(nm,nm))
+        allocate(templ(nm,nm))
+        nm=size(Hii(nx)%m,1)
+        allocate(mur(nm,nm))
+        allocate(tempr(nm,nm))
+
+        call malloc(sigma_lesser_ph,nx, sizeof(Hii))
+        call malloc(sigma_r_ph,nx, sizeof(Hii))
+        call malloc(G_r,nx, sizeof(Hii))
+        call malloc(G_lesser,nx, sizeof(Hii))
+        call malloc(G_greater,nx, sizeof(Hii))
+        call malloc(Jdens,nx, sizeof(Hii))
+        call malloc(Gl,nx, sizeof(Hii))
+        call malloc(Gln,nx, sizeof(Hii))
+
+        print *,'allocate memory done'
+        call rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
+            sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
+
+        print *,'free memory'
+        deallocate(mul,mur,tempr,templ)
+        call free(sigma_lesser_ph)
+        call free(sigma_r_ph)
+        call free(G_r)
+        call free(G_lesser)
+        call free(G_greater)
+        call free(Jdens)
+        call free(Gl)
+        call free(Gln)
 
     end subroutine negf_solve
 

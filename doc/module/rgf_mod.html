@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 8.9% of total for modules and submodules.">229 statements</a>
+               title=" 8.4% of total for modules and submodules.">229 statements</a>
           </li>
 
             <li id="source-file">
@@ -165,9 +165,10 @@
     </div>
 
     <div class="col-md-9" id='text'>
-      <p>Recursive Backward Green's solver
-Fermi distribution function
-Sancho-Rubio</p>
+      <p>Recursive  Green's  function  solvers module</p>
+<p>Recursive Backward Green's solver
+ Fermi distribution function
+ Sancho-Rubio</p>
 <br>      
           <div class="panel panel-default">
       <div class="panel-heading">
@@ -333,20 +334,20 @@ modules which it uses.
         <section>
           <h2>Subroutines</h2>
               <div class="panel panel-default">
-    <div class="panel-heading codesum"><span class="anchor" id="proc-rgf_variableblock_backward"></span><h3>public  subroutine <a href='../proc/rgf_variableblock_backward.html'>rgf_variableblock_backward</a>(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)  
+    <div class="panel-heading codesum"><span class="anchor" id="proc-rgf_variableblock_backward"></span><h3>public  subroutine <a href='../proc/rgf_variableblock_backward.html'>rgf_variableblock_backward</a>(nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)  
 </h3></div>
     <div class="panel-body">
           
   <p>
 <script type="math/tex; mode=display">H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)</script>
-<script type="math/tex; mode=display">\Sigma_R = H(i,i+1) * G00 * H(i+1,i)</script>
-<script type="math/tex; mode=display">Gl(i) = [En*S(i,i) - H00 - \Sigma_R]^{-1}</script>
-<script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma_R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger</script>
+<script type="math/tex; mode=display">\Sigma^R = H(i,i+1) * G00 * H(i+1,i)</script>
+<script type="math/tex; mode=display">Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}</script>
+<script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma^R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger</script>
 <script type="math/tex; mode=display">H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)</script>
-<script type="math/tex; mode=display">Gl(i) = [En*S(i,i) - H00 - H(i,i+1) * Gl(i+1) * H(i+1,i)]^-1</script>
+<script type="math/tex; mode=display">Gl(i) = [E*S(i,i) - H00 - H(i,i+1) * Gl(i+1) * H(i+1,i)]^{-1}</script>
 <script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger</script>
 <script type="math/tex; mode=display">\Sigma^< = \Sigma_11^< + \Sigma_{ph}^< + \Sigma_s^<</script>
-<script type="math/tex; mode=display">\G^< = G * \Sigma^< * G^\dagger</script>
+<script type="math/tex; mode=display">G^< = G * \Sigma^< * G^\dagger</script>
 <script type="math/tex; mode=display">A = G^<(i-1) * H(i-1,i) * Gl(i)^\dagger + G(i-1) * H(i-1,i) * Gln(i)</script>
 <script type="math/tex; mode=display">B = H(i,i-1) * A</script>
 <script type="math/tex; mode=display">Jdens(i) = -2 * re(B)</script>
@@ -355,7 +356,7 @@ modules which it uses.
 <script type="math/tex; mode=display">G^<(i) = Gln(i) + Gl(i) * H(i,i-1) * G^<(i-1) * H(i-1,i) *Gl(i)^\dagger</script>
 <script type="math/tex; mode=display">G^<(i) = G^<(i) + GNO * H(i-1,i) * Gln(i)</script>
 <script type="math/tex; mode=display">G^<(i) = G^<(i) + Gln(i) * H(i,i-1) * GN0</script>
-<script type="math/tex; mode=display">G^>(i) = G^<(i) + (G(i) - G(i)^\dagger)</script>
+<script type="math/tex; mode=display">G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]</script>
 </p>
 
   <h4>Arguments</h4>
@@ -369,6 +370,21 @@ modules which it uses.
         <th></th>
     </thead>
     <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nx</strong></td>
+            <td>
+<p>lenght of the device</p>
+            </td>
+        </tr>
         <tr>
             <td>
               <span class="anchor" ></span>
@@ -454,7 +470,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>Hii</strong>(:)</td>
+            <td><strong>Hii</strong>(nx)</td>
             <td>
 
             </td>
@@ -469,7 +485,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>H1i</strong>(:)</td>
+            <td><strong>H1i</strong>(nx+1)</td>
             <td>
 
             </td>
@@ -484,7 +500,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>Sii</strong>(:)</td>
+            <td><strong>Sii</strong>(nx)</td>
             <td>
 
             </td>
@@ -499,7 +515,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>sigma_lesser_ph</strong>(:)</td>
+            <td><strong>sigma_lesser_ph</strong>(nx)</td>
             <td>
 
             </td>
@@ -514,7 +530,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>sigma_r_ph</strong>(:)</td>
+            <td><strong>sigma_r_ph</strong>(nx)</td>
             <td>
 
             </td>
@@ -529,7 +545,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>G_r</strong>(:)</td>
+            <td><strong>G_r</strong>(nx)</td>
             <td>
 
             </td>
@@ -544,7 +560,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>G_lesser</strong>(:)</td>
+            <td><strong>G_lesser</strong>(nx)</td>
             <td>
 
             </td>
@@ -559,7 +575,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>G_greater</strong>(:)</td>
+            <td><strong>G_greater</strong>(nx)</td>
             <td>
 
             </td>
@@ -574,7 +590,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>Jdens</strong>(:)</td>
+            <td><strong>Jdens</strong>(nx)</td>
             <td>
 
             </td>
@@ -589,7 +605,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>Gl</strong>(:)</td>
+            <td><strong>Gl</strong>(nx)</td>
             <td>
 
             </td>
@@ -604,7 +620,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>Gln</strong>(:)</td>
+            <td><strong>Gln</strong>(nx)</td>
             <td>
 
             </td>
