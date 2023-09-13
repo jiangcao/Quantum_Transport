@@ -33,11 +33,11 @@ module deviceHam_mod
 
     integer, parameter :: dp = 8
 
-    public :: deviceHam_load_COOmatrix, deviceHam_build_blocks
+    public :: devH_build_fromCOOfile, devH_build_fromWannierFile
 
 contains
 
-    subroutine deviceHam_load_COOmatrix(fname, H, nnz, nm, row, col, use0index, complex)
+    subroutine load_COOmatrix(fname, H, nnz, nm, row, col, use0index, complex)
         character(len=*), intent(in)        :: fname !! input text file name
         complex(dp), allocatable, intent(out), dimension(:) :: H
         integer, allocatable, intent(out), dimension(:):: row, col
@@ -86,20 +86,66 @@ contains
             H(k) = dcmplx(re, im)
         end do
         close (handle)
-    end subroutine deviceHam_load_COOmatrix
+    end subroutine load_COOmatrix
 
-    subroutine deviceHam_build_blocks(H, row, col, Hii, H1i, Slices, ext_left, ext_right, num_slice)
+    subroutine devH_build_fromCOOfile(fname, Hii, H1i, ext_left, ext_right, num_slice, use0index, complex, threshold)
         use matrix_c, only: type_matrix_complex
-        complex(dp), intent(in), dimension(:)::H !! Hamiltonian matrix value in COO
-        integer, intent(in), dimension(:)::row, col !! Hamiltonian matrix index in COO
-        integer, intent(in)::ext_left, ext_right, num_slice !! extension on left/right side, number of slices in the central part
+        character(len=*), intent(in)        :: fname !! input text file name
+        integer, intent(in)::ext_left, ext_right!! extension on left/right side
+        integer, intent(out):: num_slice !!number of slices in the central part
         type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
-        integer, intent(in), dimension(:, :)::Slices !! slicing information , refer to [[graph_partition]]
+        logical, intent(in), optional::use0index, complex
+        real(dp), intent(in), optional::threshold
         ! ----
-        integer::nx
+        integer::nx, nnz, nm
+        complex(dp), allocatable, dimension(:)::H !! Hamiltonian matrix value in COO
+        integer, allocatable, dimension(:)::row, col !! Hamiltonian matrix index in COO
+        integer, allocatable, dimension(:, :)::Slices !! slicing information , refer to [[graph_partition]]
+        call load_COOmatrix(fname, H, nnz, nm, row, col, use0index, complex)
         allocate (Hii(nx))
         allocate (H1i(nx - 1))
+        num_slice = size(Slices, 2)
+        deallocate (H, col, row)
+    end subroutine devH_build_fromCOOfile
 
-    end subroutine deviceHam_build_blocks
+    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, lreorder_axis, axis)
+        use matrix_c, only: type_matrix_complex, malloc
+        use wannierHam3d, only: w90_load_from_file, w90_free_memory, w90_MAT_DEF, nb
+        character(len=*), intent(in)        :: fname !! input text file name
+        logical, intent(in), optional :: lreorder_axis !! whether to reorder axis
+        integer, intent(in), optional :: axis(3) !! permutation order
+        integer, intent(in)::nx, nslab !! extension on left/right side
+        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
+        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Sii !! overlap matrix blocks
+        ! ----
+        complex(dp), allocatable, dimension(:, :)::H00, H10
+        real(dp)::kx, ky, kz
+        integer::nm, i, im
+        integer, dimension(nx)::nmm
+        open (unit=10, file=trim(fname), status='unknown')
+        call w90_load_from_file(10, lreorder_axis, axis)
+        close (10)
+        nm = nb*nslab
+        nmm(:) = nm
+        allocate (H00(nm, nm))
+        allocate (H10(nm, nm))
+        kx = 0.0d0
+        ky = 0.0d0
+        kz = 0.0d0
+        call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
+        call w90_free_memory()
+        call malloc(Hii, nx, nmm)
+        call malloc(H1i, nx, nmm)
+        call malloc(Sii, nx, nmm)
+        do i = 1, nx
+            Hii(i)%m = H00
+            H1i(i)%m = H10
+            Sii(i)%m = dcmplx(0.0d0, 0.0d0)
+            do im = 1, nm
+                Sii(i)%m(im, im) = 1.0d0
+            end do
+        end do
+        deallocate (H00, H10)
+    end subroutine devH_build_fromWannierFile
 
 end module deviceHam_mod

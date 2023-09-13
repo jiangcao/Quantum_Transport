@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 3.5% of total for modules and submodules.">68 statements</a>
+               title=" 4.3% of total for modules and submodules.">111 statements</a>
           </li>
 
             <li id="source-file">
@@ -147,7 +147,8 @@
       </div>
       <div id="subs-0" class="panel-collapse collapse">
         <div class="list-group">
-            <a class="list-group-item" href="../module/deviceham_mod.html#proc-deviceham_load_coomatrix">deviceHam_load_COOmatrix</a>
+            <a class="list-group-item" href="../module/deviceham_mod.html#proc-devh_build_fromcoofile">devH_build_fromCOOfile</a>
+            <a class="list-group-item" href="../module/deviceham_mod.html#proc-devh_build_fromwannierfile">devH_build_fromWannierFile</a>
         </div>
       </div>
     </div>
@@ -305,7 +306,8 @@ modules which it uses.
       </div>
       <div id="subs-1" class="panel-collapse collapse">
         <div class="list-group">
-            <a class="list-group-item" href="../module/deviceham_mod.html#proc-deviceham_load_coomatrix">deviceHam_load_COOmatrix</a>
+            <a class="list-group-item" href="../module/deviceham_mod.html#proc-devh_build_fromcoofile">devH_build_fromCOOfile</a>
+            <a class="list-group-item" href="../module/deviceham_mod.html#proc-devh_build_fromwannierfile">devH_build_fromWannierFile</a>
         </div>
       </div>
     </div>
@@ -331,7 +333,7 @@ modules which it uses.
         <section>
           <h2>Subroutines</h2>
               <div class="panel panel-default">
-    <div class="panel-heading codesum"><span class="anchor" id="proc-deviceham_load_coomatrix"></span><h3>public  subroutine <a href='../proc/deviceham_load_coomatrix.html'>deviceHam_load_COOmatrix</a>(fname, H, nnz, nm, row, col, use0index, complex)  
+    <div class="panel-heading codesum"><span class="anchor" id="proc-devh_build_fromcoofile"></span><h3>public  subroutine <a href='../proc/devh_build_fromcoofile.html'>devH_build_fromCOOfile</a>(fname, Hii, H1i, ext_left, ext_right, num_slice, use0index, complex, threshold)  
 </h3></div>
     <div class="panel-body">
           
@@ -366,16 +368,61 @@ modules which it uses.
         <tr>
             <td>
               <span class="anchor" ></span>
-              complex(kind=dp),
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
-<td>intent(out),</td>
+<td>intent(inout),</td>
               <td></td>            <td>
-              allocatable, dimension(:)
+              dimension(:), allocatable
             </td>
             <td>::</td>
-            <td><strong>H</strong></td>
+            <td><strong>Hii</strong></td>
             <td>
-
+<p>Hamiltonian blocks</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout),</td>
+              <td></td>            <td>
+              dimension(:), allocatable
+            </td>
+            <td>::</td>
+            <td><strong>H1i</strong></td>
+            <td>
+<p>Hamiltonian blocks</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ext_left</strong></td>
+            <td>
+<p>extension on left/right side</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ext_right</strong></td>
+            <td>
+<p>extension on left/right side</p>
             </td>
         </tr>
         <tr>
@@ -388,54 +435,9 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>nnz</strong></td>
+            <td><strong>num_slice</strong></td>
             <td>
-
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>nm</strong></td>
-            <td>
-
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(out),</td>
-              <td></td>            <td>
-              allocatable, dimension(:)
-            </td>
-            <td>::</td>
-            <td><strong>row</strong></td>
-            <td>
-
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" ></span>
-              integer,
-            </td>
-<td>intent(out),</td>
-              <td></td>            <td>
-              allocatable, dimension(:)
-            </td>
-            <td>::</td>
-            <td><strong>col</strong></td>
-            <td>
-
+<p>number of slices in the central part</p>
             </td>
         </tr>
         <tr>
@@ -466,6 +468,166 @@ modules which it uses.
             <td><strong>complex</strong></td>
             <td>
 
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>threshold</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="panel panel-default">
+    <div class="panel-heading codesum"><span class="anchor" id="proc-devh_build_fromwannierfile"></span><h3>public  subroutine <a href='../proc/devh_build_fromwannierfile.html'>devH_build_fromWannierFile</a>(fname, Hii, H1i, Sii, nx, nslab, lreorder_axis, axis)  
+</h3></div>
+    <div class="panel-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>fname</strong></td>
+            <td>
+<p>input text file name</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout),</td>
+              <td></td>            <td>
+              dimension(:), allocatable
+            </td>
+            <td>::</td>
+            <td><strong>Hii</strong></td>
+            <td>
+<p>Hamiltonian blocks</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout),</td>
+              <td></td>            <td>
+              dimension(:), allocatable
+            </td>
+            <td>::</td>
+            <td><strong>H1i</strong></td>
+            <td>
+<p>Hamiltonian blocks</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout),</td>
+              <td></td>            <td>
+              dimension(:), allocatable
+            </td>
+            <td>::</td>
+            <td><strong>Sii</strong></td>
+            <td>
+<p>overlap matrix blocks</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nx</strong></td>
+            <td>
+<p>extension on left/right side</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nslab</strong></td>
+            <td>
+<p>extension on left/right side</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              logical,
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>lreorder_axis</strong></td>
+            <td>
+<p>whether to reorder axis</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>axis</strong>(3)</td>
+            <td>
+<p>permutation order</p>
             </td>
         </tr>
     </tbody>

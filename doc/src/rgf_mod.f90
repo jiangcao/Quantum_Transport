@@ -53,7 +53,7 @@ contains
         complex(dp) :: z
         real(dp)    :: tim
         complex(dp), allocatable :: sig(:, :), H00(:, :), H10(:, :)
-        complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)        
+        complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)
         nx = size(Hii)           ! <- lenght of the device
         z = dcmplx(En, 0.0d0)
         !
@@ -66,7 +66,7 @@ contains
         allocate (sigmar(M, M))
         allocate (sig(M, M))
         !
-        !!! H00 = H(i,i) + Sigma_ph(i) * S(i,i)
+        !! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$
         call MUL_c(sigma_r_ph(ii)%m, Sii(ii)%m, 'n', 'n', B)
         !
         H00 = Hii(ii)%m + B
@@ -80,13 +80,13 @@ contains
         close (10)
         !$omp end critical
         !
-        !!! Sigma_R = H(i,i+1) * G00 * H(i+1,i)
-        !!! Gl(i) = [En*S(i,i) - H00 - Sigma_R]^-1
+        !! $$\Sigma_R = H(i,i+1) * G00 * H(i+1,i)$$
+        !! $$Gl(i) = [En*S(i,i) - H00 - \Sigma_R]^{-1}$$
         call triMUL_c(H1i(ii + 1)%m, G00, H1i(ii + 1)%m, sigmar, 'n', 'n', 'c')
-        B = z*Sii(ii)%m - H00 - sigmar        
+        B = z*Sii(ii)%m - H00 - sigmar
         Gl(ii)%m = inv(B)
         !
-        ! Gln(i) = Gl(i) * [Sigma_ph<(i)*S(i,i) + (-(Sigma_R - Sigma_R')*ferm(..))] * Gl(i)'
+        !! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma_R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger$$
         call MUL_c(sigma_lesser_ph(ii)%m, Sii(ii)%m, 'n', 'n', B)
         sig = -(sigmar - transpose(conjg(sigmar)))*ferm((En - mur)/(BOLTZ*TEMPr))
         !
@@ -107,13 +107,13 @@ contains
             call MUL_c(sigma_r_ph(ii)%m, Sii(ii)%m, 'n', 'n', B)
             H00 = Hii(ii)%m + B
             !
-            !!! H00 = H(i,i) + Sigma_ph(i) * S(i,i)
-            !!! Gl(i) = [En*S(i,i) - H00 - H(i,i+1) * Gl(i+1) * H(i+1,i)]^-1
+            !! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$
+            !! $$Gl(i) = [En*S(i,i) - H00 - H(i,i+1) * Gl(i+1) * H(i+1,i)]^-1$$
             call triMUL_c(H1i(ii + 1)%m, Gl(ii + 1)%m, H1i(ii + 1)%m, B, 'n', 'n', 'c')
-            A = z*Sii(ii)%m - H00 - B            
+            A = z*Sii(ii)%m - H00 - B
             Gl(ii)%m = inv(A)
             !
-            !!! Gln(i) = Gl(i) * [Sigma_ph<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)'
+            !! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger$$
             call triMUL_c(H1i(ii + 1)%m, Gln(ii + 1)%m, H1i(ii + 1)%m, B, 'n', 'n', 'c')
             call MUL_c(sigma_lesser_ph(ii)%m, Sii(ii)%m, 'n', 'n', A)
             B = B + A
@@ -152,18 +152,18 @@ contains
         !$omp end critical
         !
         call triMUL_c(H1i(2)%m, Gl(2)%m, H1i(2)%m, B, 'n', 'n', 'c')
-        A = z*Sii(1)%m - H00 - B - sigmal        
+        A = z*Sii(1)%m - H00 - B - sigmal
         !
         G_r(1)%m = inv(A)
         Gl(1)%m = G_r(1)%m
         !
-  !!! Sigma^< = Sigma_11^< + Sigma_ph^< + Sigma_s^<
+  !! $$\Sigma^< = \Sigma_11^< + \Sigma_{ph}^< + \Sigma_s^<$$
         call triMUL_c(H1i(2)%m, Gln(2)%m, H1i(2)%m, B, 'n', 'n', 'c')
         call MUL_c(sigma_lesser_ph(1)%m, Sii(1)%m, 'n', 'n', A)
         sig = -(sigmal - transpose(conjg(sigmal)))*ferm((En - mul)/(BOLTZ*TEMPl))
         sig = sig + A + B
         !
-  !!! G^< = G * Sigma^< * G'
+  !! $$\G^< = G * \Sigma^< * G^\dagger$$
         call triMUL_c(G_r(1)%m, sig, G_r(1)%m, B, 'n', 'n', 'c')
         !
         G_lesser(1)%m = B
@@ -187,41 +187,41 @@ contains
         ! inside device l -> r
         do ii = 2, nx
             M = size(Hii(ii)%m, 1)
-            !!! A = G<(i-1) * H(i-1,i) * Gl(i)' + G(i-1) * H(i-1,i) * Gln(i)
+            !! $$A = G^<(i-1) * H(i-1,i) * Gl(i)^\dagger + G(i-1) * H(i-1,i) * Gln(i)$$
             call triMUL_c(G_lesser(ii - 1)%m, H1i(ii)%m, Gl(ii)%m, A, 'n', 'n', 'c')
             call triMUL_c(G_r(ii - 1)%m, H1i(ii)%m, Gln(ii)%m, B, 'n', 'n', 'n')
             A = A + B
-            !!! B = H(i,i-1) * A
-            !!! Jdens(i) = -2 * re(B)
+            !! $$B = H(i,i-1) * A$$
+            !! $$Jdens(i) = -2 * re(B)$$
             call MUL_c(H1i(ii)%m, A, 'c', 'n', B)
             Jdens(ii)%m = -2.0d0*dble(B(:, :))
             !
-            !!! GN0 = Gl(i) * H(i,i-1) * G(i-1)
-            !!! G(i) = Gl(i) + GN0 * H(i-1,i) * Gl(i)
+            !! $$GN0 = Gl(i) * H(i,i-1) * G(i-1)$$
+            !! $$G(i) = Gl(i) + GN0 * H(i-1,i) * Gl(i)$$
             call MUL_c(Gl(ii)%m, H1i(ii)%m, 'n', 'c', B)
             call MUL_c(B, G_r(ii - 1)%m, 'n', 'n', GN0)
             call MUL_c(GN0, H1i(ii)%m, 'n', 'n', C)
             call MUL_c(C, Gl(ii)%m, 'n', 'n', A)
             G_r(ii)%m = Gl(ii)%m + A
             !
-            !!! G<(i) = Gln(i) + Gl(i) * H(i,i-1) * G<(i-1) * H(i-1,i) *Gl(i)'
+            !! $$G^<(i) = Gln(i) + Gl(i) * H(i,i-1) * G^<(i-1) * H(i-1,i) *Gl(i)^\dagger$$
             call MUL_c(Gl(ii)%m, H1i(ii)%m, 'n', 'c', B)
             call MUL_c(B, G_lesser(ii - 1)%m, 'n', 'n', C)
             call MUL_c(C, H1i(ii)%m, 'n', 'n', A)
             call MUL_c(A, Gl(ii)%m, 'n', 'c', C)
             G_lesser(ii)%m = Gln(ii)%m + C
             !
-            !!! G<(i) = G<(i) + GNO * H(i-1,i) * Gln(i)
+            !! $$G^<(i) = G^<(i) + GNO * H(i-1,i) * Gln(i)$$
             call MUL_c(GN0, H1i(ii)%m, 'n', 'n', B)
             call MUL_c(B, Gln(ii)%m, 'n', 'n', C)
             G_lesser(ii)%m = G_lesser(ii)%m + C
             !
-            !!! G<(i) = G<(i) + Gln(i) * H(i,i-1) * GN0
+            !! $$G^<(i) = G^<(i) + Gln(i) * H(i,i-1) * GN0$$
             call MUL_c(Gln(ii)%m, H1i(ii)%m, 'n', 'c', B)
             call MUL_c(B, GN0, 'n', 'c', C)
             G_lesser(ii)%m = G_lesser(ii)%m + C
             !
-            !!! G>(i) = G<(i) + (G(i) - G(i)')
+            !! $$G^>(i) = G^<(i) + (G(i) - G(i)^\dagger)$$
             G_greater(ii)%m = G_lesser(ii)%m + (G_r(ii)%m - transpose(conjg(G_r(ii)%m)))
         end do
         ii = nx
@@ -248,7 +248,7 @@ contains
 
 !!  Sancho-Rubio
     subroutine sancho(nm, E, S00, H00, H10, G00, GBB)
-      use linalg, only : invert
+        use linalg, only: invert
         integer i, j, k, nm, nmax
         COMPLEX(dp) :: z
         real(dp) :: E, error
@@ -284,7 +284,7 @@ contains
         H_SS = H00
         do i = 1, nmax
             A = z*S00 - H_BB
-            call invert(A,nm)
+            call invert(A, nm)
             call zgemm('n', 'n', nm, nm, nm, alpha, A, nm, H_10, nm, beta, B, nm)
             call zgemm('n', 'n', nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
             H_SS = H_SS + C
@@ -315,10 +315,10 @@ contains
             END IF
         end do
         G00 = z*S00 - H_SS
-        call invert(G00,nm)
+        call invert(G00, nm)
         !
         GBB = z*S00 - H_BB
-        call invert(GBB,nm)
+        call invert(GBB, nm)
         !
         Deallocate (tmp)
         Deallocate (A)

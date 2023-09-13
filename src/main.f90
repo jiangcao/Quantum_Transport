@@ -1,4 +1,4 @@
-! Copyright (c) 2023 Jiang Cao, ETH Zurich 
+! Copyright (c) 2023 Jiang Cao, ETH Zurich
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -9,8 +9,8 @@
 ! 2. Redistributions in binary form must reproduce the above copyright notice,
 !    this list of conditions and the following disclaimer in the documentation
 !    and/or other materials provided with the distribution.
-! 3. Neither the name of the copyright holder nor the names of its contributors 
-!    may be used to endorse or promote products derived from this software without 
+! 3. Neither the name of the copyright holder nor the names of its contributors
+!    may be used to endorse or promote products derived from this software without
 !    specific prior written permission.
 !
 ! THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -23,13 +23,24 @@
 ! INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 ! CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ! ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-! POSSIBILITY OF SUCH DAMAGE. 
+! POSSIBILITY OF SUCH DAMAGE.
 !
 PROGRAM main
 
-use negf_mod
-use deviceHam_mod
+    use negf_mod, only: negf_solve
+    use matrix_c, only: type_matrix_complex, free
+    use deviceHam_mod, only: devH_build_fromWannierFile
 
-implicit none
+    implicit none
+
+    type(type_matrix_complex), allocatable, dimension(:)::Hii, H1i, Sii
+    integer::nx, ns
+
+    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns)
+    call negf_solve(nx, Hii, H1i, Sii)
+
+    call free(Hii)
+    call free(H1i)
+    call free(Sii)
 
 END PROGRAM main

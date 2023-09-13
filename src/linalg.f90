@@ -157,7 +157,7 @@ CONTAINS
         !
         if (INFO .ne. 0) then
             write (*, *) 'SEVERE WARNING: zfeast_heev HAS FAILED. INFO=', INFO
-            call abort
+            call abort()
         end if
         eigv_feast(1:m) = W(1:m)
         A(:, 1:m) = x(:, 1:m)

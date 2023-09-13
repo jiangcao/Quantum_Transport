@@ -1,4 +1,4 @@
-! Copyright (c) 2023 Jiang Cao, ETH Zurich 
+! Copyright (c) 2023 Jiang Cao, ETH Zurich
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -9,8 +9,8 @@
 ! 2. Redistributions in binary form must reproduce the above copyright notice,
 !    this list of conditions and the following disclaimer in the documentation
 !    and/or other materials provided with the distribution.
-! 3. Neither the name of the copyright holder nor the names of its contributors 
-!    may be used to endorse or promote products derived from this software without 
+! 3. Neither the name of the copyright holder nor the names of its contributors
+!    may be used to endorse or promote products derived from this software without
 !    specific prior written permission.
 !
 ! THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -23,19 +23,40 @@
 ! INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 ! CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ! ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-! POSSIBILITY OF SUCH DAMAGE. 
+! POSSIBILITY OF SUCH DAMAGE.
 !
 module negf_mod
 
-use linalg
-use static
-use rgf_mod
+    use matrix_c, only: type_matrix_complex
 
-implicit none
+    implicit none
 
-private
+    private
 
+    integer, parameter :: dp = 8
+
+    public :: negf_solve
 
 contains
+
+    subroutine negf_solve(nx, Hii, H1i, Sii)
+        use rgf_mod, only: rgf_variableblock_backward
+        type(type_matrix_complex), intent(in), dimension(nx)::Hii,Sii
+        type(type_matrix_complex), intent(in), dimension(nx+1)::H1i
+        integer, intent(in)::nx  !! number of blocks        
+        ! ----
+        real(dp),allocatable,dimension(:)::temp !! temperatures
+        real(dp),allocatable,dimension(:):: mu !! chemical potentials
+        real(dp)::emin,emax !! min and max energy range        
+        integer:: nen !! number of energy points
+        real(dp)::en
+        real(dp),dimension(:,:),allocatable::mul,mur,templ,tempr
+        type(type_matrix_complex),dimension(:),allocatable::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
+        real(dp)::tr,tre
+        en = 0.0d0 
+        call rgf_variableblock_backward(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
+                                        sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
+
+    end subroutine negf_solve
 
 end module negf_mod
