@@ -19,7 +19,7 @@ vpath %.o $(MODDIR)
 
 all: qt.x 
 
-qt.x : main.f90 static.o linalg.o matrix_c.o graph_partition.o deviceHam_mod.o rgf_mod.o negf_mod.o
+qt.x : main.f90 mkl_dfti.o fft_mod.o static.o linalg.o matrix_c.o graph_partition.o wannierHam3d.o deviceHam_mod.o rgf_mod.o negf_mod.o
 
 	$(FC90) -o $@ $< $(MODDIR)/*.o $(F90_FLAGS) $(LIBS) -module $(MODDIR) $(MACFLAGS)
 
