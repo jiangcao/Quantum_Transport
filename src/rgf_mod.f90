@@ -28,6 +28,7 @@
 ! AUTHOR: Jiang Cao
 !
 module rgf_mod
+    !! Recursive  Green's  function  solvers module
 
     implicit none
 
@@ -40,21 +41,21 @@ module rgf_mod
 contains
 
 !!  Recursive Backward Green's solver
-    subroutine rgf_variableblock_backward(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
+    subroutine rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
                                           sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
         use matrix_c, only: type_matrix_complex, MUL_C, triMUL_C, inv => array_inverse, trace
         use static
-        type(type_matrix_complex), intent(in) :: Hii(:), H1i(:), Sii(:), sigma_lesser_ph(:), sigma_r_ph(:)
+        type(type_matrix_complex), intent(in) :: Hii(nx), H1i(nx+1), Sii(nx), sigma_lesser_ph(nx), sigma_r_ph(nx)
         real(dp), intent(in)       :: En, mul(:, :), mur(:, :), TEMPr(:, :), TEMPl(:, :)
-        type(type_matrix_complex), intent(inout):: G_greater(:), G_lesser(:), G_r(:), Jdens(:), Gl(:), Gln(:)
+        integer,intent(in) :: nx !! lenght of the device
+        type(type_matrix_complex), intent(inout):: G_greater(nx), G_lesser(nx), G_r(nx), Jdens(nx), Gl(nx), Gln(nx)
         real(dp), intent(out)      :: tr, tre
         !---- local variables
-        integer    :: nx, M, ii, jj
+        integer    :: M, ii, jj
         complex(dp) :: z
         real(dp)    :: tim
         complex(dp), allocatable :: sig(:, :), H00(:, :), H10(:, :)
-        complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)
-        nx = size(Hii)           ! <- lenght of the device
+        complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)        
         z = dcmplx(En, 0.0d0)
         !
         ! on the right contact
@@ -80,13 +81,13 @@ contains
         close (10)
         !$omp end critical
         !
-        !! $$\Sigma_R = H(i,i+1) * G00 * H(i+1,i)$$
-        !! $$Gl(i) = [En*S(i,i) - H00 - \Sigma_R]^{-1}$$
+        !! $$\Sigma^R = H(i,i+1) * G00 * H(i+1,i)$$
+        !! $$Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}$$
         call triMUL_c(H1i(ii + 1)%m, G00, H1i(ii + 1)%m, sigmar, 'n', 'n', 'c')
         B = z*Sii(ii)%m - H00 - sigmar
         Gl(ii)%m = inv(B)
         !
-        !! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma_R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger$$
+        !! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma^R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger$$
         call MUL_c(sigma_lesser_ph(ii)%m, Sii(ii)%m, 'n', 'n', B)
         sig = -(sigmar - transpose(conjg(sigmar)))*ferm((En - mur)/(BOLTZ*TEMPr))
         !
@@ -108,7 +109,7 @@ contains
             H00 = Hii(ii)%m + B
             !
             !! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$
-            !! $$Gl(i) = [En*S(i,i) - H00 - H(i,i+1) * Gl(i+1) * H(i+1,i)]^-1$$
+            !! $$Gl(i) = [E*S(i,i) - H00 - H(i,i+1) * Gl(i+1) * H(i+1,i)]^{-1}$$
             call triMUL_c(H1i(ii + 1)%m, Gl(ii + 1)%m, H1i(ii + 1)%m, B, 'n', 'n', 'c')
             A = z*Sii(ii)%m - H00 - B
             Gl(ii)%m = inv(A)
@@ -163,7 +164,7 @@ contains
         sig = -(sigmal - transpose(conjg(sigmal)))*ferm((En - mul)/(BOLTZ*TEMPl))
         sig = sig + A + B
         !
-  !! $$\G^< = G * \Sigma^< * G^\dagger$$
+  !! $$G^< = G * \Sigma^< * G^\dagger$$
         call triMUL_c(G_r(1)%m, sig, G_r(1)%m, B, 'n', 'n', 'c')
         !
         G_lesser(1)%m = B
@@ -221,7 +222,7 @@ contains
             call MUL_c(B, GN0, 'n', 'c', C)
             G_lesser(ii)%m = G_lesser(ii)%m + C
             !
-            !! $$G^>(i) = G^<(i) + (G(i) - G(i)^\dagger)$$
+            !! $$G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]$$
             G_greater(ii)%m = G_lesser(ii)%m + (G_r(ii)%m - transpose(conjg(G_r(ii)%m)))
         end do
         ii = nx

@@ -55,7 +55,7 @@ contains
         type(type_matrix_complex),dimension(:),allocatable::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
         real(dp)::tr,tre
         en = 0.0d0 
-        call rgf_variableblock_backward(En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
+        call rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
                                         sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
 
     end subroutine negf_solve

@@ -121,7 +121,7 @@ contains
         complex(dp), allocatable, dimension(:, :)::H00, H10
         real(dp)::kx, ky, kz
         integer::nm, i, im
-        integer, dimension(nx)::nmm
+        integer, dimension(nx+1)::nmm
         open (unit=10, file=trim(fname), status='unknown')
         call w90_load_from_file(10, lreorder_axis, axis)
         close (10)
@@ -134,9 +134,9 @@ contains
         kz = 0.0d0
         call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
         call w90_free_memory()
-        call malloc(Hii, nx, nmm)
-        call malloc(H1i, nx, nmm)
+        call malloc(Hii, nx, nmm)        
         call malloc(Sii, nx, nmm)
+        call malloc(H1i, nx+1, nmm)
         do i = 1, nx
             Hii(i)%m = H00
             H1i(i)%m = H10
@@ -145,6 +145,7 @@ contains
                 Sii(i)%m(im, im) = 1.0d0
             end do
         end do
+        H1i(nx+1)%m = H10
         deallocate (H00, H10)
     end subroutine devH_build_fromWannierFile
 

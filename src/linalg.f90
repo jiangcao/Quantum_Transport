@@ -186,7 +186,7 @@ CONTAINS
         deallocate (work, rwork)
         if (INFO .ne. 0) then
             write (*, *) 'SEVERE WARNING: ZHEEV HAS FAILED. INFO=', INFO
-            call abort
+            call abort()
         end if
         eigv(:) = W(:)
     END FUNCTION eigv
