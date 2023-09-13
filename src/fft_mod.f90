@@ -3,6 +3,8 @@
 
 module fft_mod
 
+    !! FFT, conv, and corr functions
+
     implicit none
 
     private

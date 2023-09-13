@@ -26,6 +26,7 @@
 ! POSSIBILITY OF SUCH DAMAGE.
 !
 module negf_mod
+    !! Non-equilibrium Green's function (NEGF) module, upper-level driver for solving the NEGF equations
 
     use matrix_c, only: type_matrix_complex
 
