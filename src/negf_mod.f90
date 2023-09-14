@@ -82,11 +82,15 @@ contains
         dE = (emax-emin)/dble(nen-1)
 
         do ik=1,nk
+            !$omp parallel default(shared) private(ie,en)
+            !$omp do 
             do ie=1,nen
                 En=emin+dble(ie-1)*dE
                 call rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph(:,ie,ik), &
                     sigma_r_ph(:,ie,ik), G_r(:,ie,ik), G_lesser(:,ie,ik), G_greater(:,ie,ik), Jdens, Gl, Gln, tr, tre)
             enddo
+            !$omp end do 
+            !$omp end parallel
         enddo
 
         print *,'free memory'

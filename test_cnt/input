@@ -3,4 +3,5 @@ nx=10
 nen=2000
 emin=-15
 emax=5
+nomp=10
 /
