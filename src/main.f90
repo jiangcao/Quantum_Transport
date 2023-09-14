@@ -33,8 +33,11 @@ PROGRAM main
 
     implicit none
 
-    type(type_matrix_complex), allocatable, dimension(:)::Hii, H1i, Sii
-    integer::nx, ns
+    type(type_matrix_complex), allocatable, dimension(:,:)::Hii, H1i, Sii
+    integer::nx, ns, nen,nk
+    real(8),dimension(2)::temp,mu
+    real(8)::emin,emax
+    real(8)::k(2,1)
 
     ! MPI variables
     integer ( kind = 4 ) ierr
@@ -51,13 +54,22 @@ PROGRAM main
 
     nx = 5
     ns = 3
+    temp=300.0d0
+    mu=0.0d0
+    nk=1
+    nen=100
+    emin=-10.0d0
+    emax=5.0d0
+    k=0.0d0
 
-    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns)
+    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns,nk,k)
     print *,"solve"
-    call negf_solve(nx, Hii, H1i, Sii)
+    call negf_solve(nx,nen,nk,emin,emax, Hii, H1i, Sii,temp,mu)
 
     call free(Hii)
     call free(H1i)
     call free(Sii)
+
+    deallocate(Hii,H1i,Sii)
 
 END PROGRAM main

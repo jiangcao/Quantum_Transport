@@ -108,19 +108,21 @@ contains
         deallocate (H, col, row)
     end subroutine devH_build_fromCOOfile
 
-    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, lreorder_axis, axis)
+    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab,nk,k, lreorder_axis, axis)
         use matrix_c, only: type_matrix_complex, malloc
         use wannierHam3d, only: w90_load_from_file, w90_free_memory, w90_MAT_DEF, nb
         character(len=*), intent(in)        :: fname !! input text file name
         logical, intent(in), optional :: lreorder_axis !! whether to reorder axis
         integer, intent(in), optional :: axis(3) !! permutation order
         integer, intent(in)::nx, nslab !! extension on left/right side
-        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
-        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Sii !! overlap matrix blocks
+        type(type_matrix_complex), dimension(:,:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
+        type(type_matrix_complex), dimension(:,:), intent(inout), allocatable::Sii !! overlap matrix blocks
+        real(dp),intent(in)::k(2,nk)
+        integer,intent(in)::nk
         ! ----
         complex(dp), allocatable, dimension(:, :)::H00, H10
         real(dp)::kx, ky, kz
-        integer::nm, i, im
+        integer::nm, i, im,ik
         integer, dimension(nx+1)::nmm
         open (unit=10, file=trim(fname), status='unknown')
         call w90_load_from_file(10, lreorder_axis, axis)
@@ -130,27 +132,30 @@ contains
         allocate (H00(nm, nm))
         allocate (H10(nm, nm))
         kx = 0.0d0
-        ky = 0.0d0
-        kz = 0.0d0
-        call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
-        call w90_free_memory()
 
-        allocate(Hii(nx))
-        allocate(H1i(nx+1))
-        allocate(Sii(nx))
-        call malloc(Hii, nx, nmm(1:nx))        
-        call malloc(Sii, nx, nmm(1:nx))
-        call malloc(H1i, nx+1, nmm)
-
-        do i = 1, nx
-            Hii(i)%m = H00
-            H1i(i)%m = H10
-            Sii(i)%m = dcmplx(0.0d0, 0.0d0)
-            do im = 1, nm
-                Sii(i)%m(im, im) = 1.0d0
+        allocate(Hii(nx,nk))
+        allocate(H1i(nx+1,nk))
+        allocate(Sii(nx,nk))
+        do ik=1,nk
+            ky=k(1,ik)
+            kz=k(2,ik)
+            call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
+            call w90_free_memory()
+    
+            call malloc(Hii(:,ik), nx, nmm(1:nx))        
+            call malloc(Sii(:,ik), nx, nmm(1:nx))
+            call malloc(H1i(:,ik), nx+1, nmm)
+    
+            do i = 1, nx
+                Hii(i,ik)%m = H00
+                H1i(i,ik)%m = H10
+                Sii(i,ik)%m = dcmplx(0.0d0, 0.0d0)
+                do im = 1, nm
+                    Sii(i,ik)%m(im, im) = 1.0d0
+                end do
             end do
-        end do
-        H1i(nx+1)%m = H10
+            H1i(nx+1,ik)%m = H10
+        enddo
         deallocate (H00, H10)
     end subroutine devH_build_fromWannierFile
 
