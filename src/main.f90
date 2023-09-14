@@ -38,6 +38,10 @@ PROGRAM main
     real(8),dimension(2)::temp,mu
     real(8)::emin,emax
     real(8)::k(2,1)
+    character(len=10)::file_path
+    integer::rc,fu
+
+    namelist /input/ nx,ns,temp,mu,nk,k,nen,emin,emax
 
     ! MPI variables
     integer ( kind = 4 ) ierr
@@ -52,6 +56,7 @@ PROGRAM main
     include "mpif.h"
     call MPI_Init(ierr)
 
+    ! default values
     nx = 5
     ns = 3
     temp=300.0d0
@@ -61,6 +66,20 @@ PROGRAM main
     emin=-10.0d0
     emax=5.0d0
     k=0.0d0
+
+    ! Check whether file exists.
+    file_path='input'
+    inquire (file=file_path, iostat=rc)
+
+    if (rc /= 0) then
+        write (*, '("Error: input file ", a, " does not exist")') file_path
+    end if
+    ! Open and read Namelist file.
+    open (action='read', file=file_path, iostat=rc, newunit=fu)
+    read (nml=input, iostat=rc, unit=fu)
+    close(fu)
+
+
 
     call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns,nk,k)
     print *,"solve"
