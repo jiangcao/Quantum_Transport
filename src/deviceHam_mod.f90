@@ -192,7 +192,9 @@ contains
         character(len=*), intent(in)        :: fname !! input text file name
         logical, intent(in), optional :: lreorder_axis !! whether to reorder axis
         integer, intent(in), optional :: axis(3) !! permutation order
-        integer, intent(in)::nx, nslab !! extension on left/right side
+        integer, intent(in)::nx !! number of slabs
+        integer, intent(in):: nslab !! number of cells per slab
+        integer, intent(out):: nband !! number of bands/orbitals per cell (from wannier90)
         type(type_matrix_complex), dimension(:, :), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
         type(type_matrix_complex), dimension(:, :), intent(inout), allocatable::Sii !! overlap matrix blocks
         real(dp), intent(in)::k(2, nk)
