@@ -589,7 +589,7 @@ contains
 !!   The graph will be allocated inside the subroutine, so remember to deallocate the memory outside
         implicit none
         integer, intent(in) :: nnz
-        integer, intent(in), dimension(nnz) :: IA, JA !! IA and JA index vectors of a CSR matrix
+        integer, intent(in), dimension(nnz) :: row, col !! IA and JA index vectors of a CSR matrix
         integer, allocatable, intent(out) :: g(:, :)  !! Graph connectivity table
 
     end subroutine convert_fromCOO

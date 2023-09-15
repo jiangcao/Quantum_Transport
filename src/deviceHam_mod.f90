@@ -38,7 +38,7 @@ module deviceHam_mod
 contains
 
     subroutine load_COOmatrix(fname, H, nnz, nm, row, col, use0index, iscomplex)
-        character(len=*), intent(in)        :: fname !! input text file name
+        character(len=*), intent(in) :: fname !! input text file name
         complex(dp), allocatable, intent(out), dimension(:) :: H
         integer, allocatable, intent(out), dimension(:):: row, col
         integer, intent(out)::nnz
@@ -92,7 +92,7 @@ contains
         use matrix_c, only: type_matrix_complex, malloc
         use graph_partition, only: slice, convert_fromCOO
         character(len=*), intent(in) :: hfname !! input H file name
-        character(len=*), intent(in) :: sfname !! input S file name
+        character(len=*), intent(in), optional :: sfname !! input S file name
         integer, intent(in)::ext(2)!! number of extension blocks on left/right side
         integer, intent(in)::contactBlockSize(2)!! number of orbitals in the contact block
         integer, intent(out):: nx !! total number of slices
@@ -110,12 +110,15 @@ contains
         integer, allocatable, dimension(:, :)::g !! graph , refer to [[graph_partition]]
         integer, dimension(contactBlockSize(1))::E1 !! edge 1 , refer to [[graph_partition]]
         integer, dimension(contactBlockSize(2))::E2 !! edge 2 , refer to [[graph_partition]]
-        call load_COOmatrix(hfname, H, nnz, norb, row, col, use0index, iscomplex)
-        call load_COOmatrix(Sfname, S, nnz, norb, row, col, use0index, iscomplex)
+        !
+        if (present(sfname)) call load_COOmatrix(trim(Sfname), S, nnz, norb, row, col, use0index, iscomplex)
+        call load_COOmatrix(trim(hfname), H, nnz, norb, row, col, use0index, iscomplex)
+        !
+        ! optionally remove small matrix elements below threshold
         if (present(threshold)) then
             newnnz = count(abs(H) > threshold)
             allocate (newH(newnnz))
-            allocate (newS(newnnz))
+            if (present(sfname)) allocate (newS(newnnz))
             allocate (newrow(newnnz))
             allocate (newcol(newnnz))
             j = 0
@@ -123,46 +126,54 @@ contains
                 if (abs(H(i)) > threshold) then
                     j = j + 1
                     newH(j) = H(i)
-                    newS(j) = S(i)
+                    if (present(sfname)) newS(j) = S(i)
                     newrow(j) = row(i)
                     newcol(j) = col(i)
                 end if
             end do
-            deallocate (H, S, row, col)
+            deallocate (H, row, col)
+            if (present(sfname)) deallocate (S)
             call move_alloc(newH, H)
-            call move_alloc(newS, S)
+            if (present(sfname)) call move_alloc(newS, S)
             call move_alloc(newrow, row)
             call move_alloc(newcol, col)
             nnz = newnnz
         end if
         ! convert sparse matrix to a graph
         call convert_fromCOO(nnz, row, col, g)
-        forall(i=1:contactBlockSize(1)) E1(i) = i
-        forall(i=1:contactBlockSize(2)) E2(i) = norb - contactBlockSize(2) + i
+        forall (i=1:contactBlockSize(1)) E1(i) = i
+        forall (i=1:contactBlockSize(2)) E2(i) = norb - contactBlockSize(2) + i
         ! slice the device
         nmax = 100
         ! try 1 contact slicing from left
         call slice(g, E1, Slices) ! slicing from left to right
         num_slices = size(Slices, 2)
-        if (((Slices(1,num_slices)-1)<contactBlockSize(2)) .or. ((maxval(Slices(1,:))-minval(Slices(1,:)))>(2*minval(Slices(1,:))))) then
-            ! too small right contact , or very unbalanced slicing 
+        if (((Slices(1, num_slices) - 1) < contactBlockSize(2)) .or. &
+            ((maxval(Slices(1, :)) - minval(Slices(1, :))) > (2*minval(Slices(1, :))))) then
+            ! too small right contact , or very unbalanced slicing
             ! try 1 contact slicing from right
             call slice(g, E2, Slices) ! slicing from right to left
             num_slices = size(Slices, 2)
-            if (((Slices(1,1)-1)<contactBlockSize(1)) .or. ((maxval(Slices(1,:))-minval(Slices(1,:)))>(2*minval(Slices(1,:))))) then
-                ! too small left contact , or very unbalanced slicing 
+            if (((Slices(1, 1) - 1) < contactBlockSize(1)) .or. &
+                ((maxval(Slices(1, :)) - minval(Slices(1, :))) > (2*minval(Slices(1, :))))) then
+                ! too small left contact , or very unbalanced slicing
                 call slice(g, E1, E2, NMAX, Slices) ! try 2 contact slicing
                 num_slices = size(Slices, 2)
-            endif
-        endif
-        print *, ' Slicing info: ', num_slices,' slices, with block sizes = '
-        print '(12 I8)', slices(1,:)-1         
+            end if
+        end if
+        print *, ' Slicing info: ', num_slices, ' slices, with block sizes = '
+        print '(12 I8)', slices(1, :) - 1
         ! allocate the blocks : left extension|device|right extension
         nx = ext(1) + num_slices + ext(2)
         allocate (nmii(2, nx))
-        allocate (nm1i(2, nx))
+        allocate (nm1i(2, nx + 1))
         nmii(:, 1:ext(1)) = contactBlockSize(1)
         nmii(:, nx - ext(2) + 1:nx) = contactBlockSize(2)
+        nmii(:, ext(1):nx - ext(2)) = Slices(1, :) - 1
+        nm1i(:, 1) = nmii(:, 1)
+        nm1i(:, nx + 1) = nmii(:, nx)
+        nm1i(1, 2:nx) = nmii(1, 2:nx)
+        nm1i(2, 2:nx) = nmii(1, 1:nx - 1)
         allocate (Hii(nx))
         allocate (Sii(nx))
         allocate (H1i(nx + 1))
@@ -170,11 +181,12 @@ contains
         call malloc(Sii, nx, nmii)
         call malloc(H1i, nx + 1, nm1i)
         ! build the blocks
-        
-        deallocate (S, H, col, row, nmii, nm1i)
+
+        deallocate (H, col, row, nmii, nm1i)
+        if (present(sfname)) deallocate (S)
     end subroutine devH_build_fromCOOfile
 
-    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, nk, k, lreorder_axis, axis)
+    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, nband, nk, k, lreorder_axis, axis)
         use matrix_c, only: type_matrix_complex, malloc
         use wannierHam3d, only: w90_load_from_file, w90_free_memory, w90_MAT_DEF, nb
         character(len=*), intent(in)        :: fname !! input text file name
@@ -194,11 +206,12 @@ contains
         call w90_load_from_file(10, lreorder_axis, axis)
         close (10)
         nm = nb*nslab
+        nband = nb
         nmm(:) = nm
         allocate (H00(nm, nm))
         allocate (H10(nm, nm))
         kx = 0.0d0
-
+        !
         allocate (Hii(nx, nk))
         allocate (H1i(nx + 1, nk))
         allocate (Sii(nx, nk))
@@ -207,11 +220,11 @@ contains
             kz = k(2, ik)
             call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
             call w90_free_memory()
-
+            !
             call malloc(Hii(:, ik), nx, nmm(1:nx))
             call malloc(Sii(:, ik), nx, nmm(1:nx))
             call malloc(H1i(:, ik), nx + 1, nmm)
-
+            !
             do i = 1, nx
                 Hii(i, ik)%m = H00
                 H1i(i, ik)%m = H10

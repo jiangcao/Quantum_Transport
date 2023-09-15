@@ -29,30 +29,29 @@ PROGRAM main
 
     use negf_mod, only: negf_solve
     use matrix_c, only: type_matrix_complex, free
-    use deviceHam_mod, only: devH_build_fromWannierFile
+    use deviceHam_mod, only: devH_build_fromWannierFile    
 
     implicit none
 
-    type(type_matrix_complex), allocatable, dimension(:,:)::Hii, H1i, Sii
-    integer::nx, ns, nen,nk
-    real(8),dimension(2)::temp,mu
-    real(8)::emin,emax
-    real(8)::k(2,1)
+    type(type_matrix_complex), allocatable, dimension(:, :)::Hii, H1i, Sii
+    integer::nx, ns, nen, nk, nb
+    real(8), dimension(2)::temp, mu
+    real(8)::emin, emax
+    real(8)::k(2, 1)
     character(len=10)::file_path
-    integer::rc,fu
-    integer::nomp ! openmp process number 
+    integer::rc, fu
+    integer::nomp ! openmp process number
 
-    namelist /input/ nx,ns,temp,mu,nk,nomp,nen,emin,emax
+    namelist /input/ nx, ns, temp, mu, nk, nomp, nen, emin, emax
 
     ! MPI variables
-    integer ( kind = 4 ) ierr
-    integer ( kind = 4 ) comm_size
-    integer ( kind = 4 ) comm_rank
-    integer ( kind = 4 ) local_Nkz
-    integer ( kind = 4 ) local_Nky
-    integer ( kind = 4 ) local_NE
-    integer ( kind = 4 ) first_local_energy
-
+    integer(kind=4) ierr
+    integer(kind=4) comm_size
+    integer(kind=4) comm_rank
+    integer(kind=4) local_Nkz
+    integer(kind=4) local_Nky
+    integer(kind=4) local_NE
+    integer(kind=4) first_local_energy
 
     include "mpif.h"
     call MPI_Init(ierr)
@@ -60,17 +59,17 @@ PROGRAM main
     ! default values
     nx = 5
     ns = 3
-    temp=300.0d0
-    mu=0.0d0
-    nk=1
-    nen=100
-    emin=-10.0d0
-    emax=5.0d0
-    k=0.0d0
-    nomp=4
+    temp = 300.0d0
+    mu = 0.0d0
+    nk = 1
+    nen = 100
+    emin = -10.0d0
+    emax = 5.0d0
+    k = 0.0d0
+    nomp = 4
 
     ! Check whether file exists.
-    file_path='input'
+    file_path = 'input'
     inquire (file=file_path, iostat=rc)
 
     if (rc /= 0) then
@@ -79,19 +78,20 @@ PROGRAM main
         ! Open and read Namelist file.
         open (action='read', file=file_path, iostat=rc, newunit=fu)
         read (nml=input, iostat=rc, unit=fu)
-        close(fu)
+        close (fu)
     end if
 
     call omp_set_num_threads(nomp)
 
-    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns,nk,k)
-    print *,"solve"
-    call negf_solve(nx,nen,nk,emin,emax, Hii, H1i, Sii,temp,mu)
+    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns, nb, nk, k)
+    print *, "solve"
+    call negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu &
+                    comm_size, comm_rank, local_NE, first_local_energy, NB, NS)
 
     call free(Hii)
     call free(H1i)
     call free(Sii)
 
-    deallocate(Hii,H1i,Sii)
+    deallocate (Hii, H1i, Sii)
 
 END PROGRAM main
