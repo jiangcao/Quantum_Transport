@@ -37,13 +37,13 @@ module deviceHam_mod
 
 contains
 
-    subroutine load_COOmatrix(fname, H, nnz, nm, row, col, use0index, complex)
+    subroutine load_COOmatrix(fname, H, nnz, nm, row, col, use0index, iscomplex)
         character(len=*), intent(in)        :: fname !! input text file name
         complex(dp), allocatable, intent(out), dimension(:) :: H
         integer, allocatable, intent(out), dimension(:):: row, col
         integer, intent(out)::nnz
         integer, intent(out)::nm
-        logical, intent(in), optional::use0index, complex
+        logical, intent(in), optional::use0index, iscomplex
         logical :: l0index
         real(dp) :: re, im
         integer::handle, io
@@ -72,7 +72,7 @@ contains
         rewind handle
         im = 0.0d0
         do k = 1, NL
-            if ((present(complex)) .and. complex) then
+            if ((present(iscomplex)) .and. iscomplex) then
                 read (handle, *) i, j, re, im
             else
                 read (handle, *) i, j, re
@@ -88,42 +88,108 @@ contains
         close (handle)
     end subroutine load_COOmatrix
 
-    subroutine devH_build_fromCOOfile(fname, Hii, H1i, ext_left, ext_right, num_slice, use0index, complex, threshold)
-        use matrix_c, only: type_matrix_complex
-        character(len=*), intent(in)        :: fname !! input text file name
-        integer, intent(in)::ext_left, ext_right!! extension on left/right side
-        integer, intent(out):: num_slice !!number of slices in the central part
-        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
-        logical, intent(in), optional::use0index, complex
+    subroutine devH_build_fromCOOfile(hfname, sfname, Hii, H1i, Sii, ext, contactBlockSize, nx, use0index, iscomplex, threshold)
+        use matrix_c, only: type_matrix_complex, malloc
+        use graph_partition, only: slice, convert_fromCOO
+        character(len=*), intent(in) :: hfname !! input H file name
+        character(len=*), intent(in) :: sfname !! input S file name
+        integer, intent(in)::ext(2)!! number of extension blocks on left/right side
+        integer, intent(in)::contactBlockSize(2)!! number of orbitals in the contact block
+        integer, intent(out):: nx !! total number of slices
+        type(type_matrix_complex), dimension(:), intent(inout), allocatable::Hii, H1i, Sii !! Hamiltonian blocks
+        logical, intent(in), optional::use0index, iscomplex
         real(dp), intent(in), optional::threshold
         ! ----
-        integer::nx, nnz, nm
-        complex(dp), allocatable, dimension(:)::H !! Hamiltonian matrix value in COO
+        integer:: nnz, norb, i, newnnz, j, num_slices, nmax
+        integer, allocatable, dimension(:, :)::nmii, nm1i
+        complex(dp), allocatable, dimension(:)::H, newH !! Hamiltonian matrix value in COO
+        complex(dp), allocatable, dimension(:)::S, newS !! overlap matrix value in COO
         integer, allocatable, dimension(:)::row, col !! Hamiltonian matrix index in COO
+        integer, allocatable, dimension(:)::newrow, newcol !! Hamiltonian matrix index in COO
         integer, allocatable, dimension(:, :)::Slices !! slicing information , refer to [[graph_partition]]
-        call load_COOmatrix(fname, H, nnz, nm, row, col, use0index, complex)
+        integer, allocatable, dimension(:, :)::g !! graph , refer to [[graph_partition]]
+        integer, dimension(contactBlockSize(1))::E1 !! edge 1 , refer to [[graph_partition]]
+        integer, dimension(contactBlockSize(2))::E2 !! edge 2 , refer to [[graph_partition]]
+        call load_COOmatrix(hfname, H, nnz, norb, row, col, use0index, iscomplex)
+        call load_COOmatrix(Sfname, S, nnz, norb, row, col, use0index, iscomplex)
+        if (present(threshold)) then
+            newnnz = count(abs(H) > threshold)
+            allocate (newH(newnnz))
+            allocate (newS(newnnz))
+            allocate (newrow(newnnz))
+            allocate (newcol(newnnz))
+            j = 0
+            do i = 1, nnz
+                if (abs(H(i)) > threshold) then
+                    j = j + 1
+                    newH(j) = H(i)
+                    newS(j) = S(i)
+                    newrow(j) = row(i)
+                    newcol(j) = col(i)
+                end if
+            end do
+            deallocate (H, S, row, col)
+            call move_alloc(newH, H)
+            call move_alloc(newS, S)
+            call move_alloc(newrow, row)
+            call move_alloc(newcol, col)
+            nnz = newnnz
+        end if
+        ! convert sparse matrix to a graph
+        call convert_fromCOO(nnz, row, col, g)
+        forall(i=1:contactBlockSize(1)) E1(i) = i
+        forall(i=1:contactBlockSize(2)) E2(i) = norb - contactBlockSize(2) + i
+        ! slice the device
+        nmax = 100
+        ! try 1 contact slicing from left
+        call slice(g, E1, Slices) ! slicing from left to right
+        num_slices = size(Slices, 2)
+        if (((Slices(1,num_slices)-1)<contactBlockSize(2)) .or. ((maxval(Slices(1,:))-minval(Slices(1,:)))>(2*minval(Slices(1,:))))) then
+            ! too small right contact , or very unbalanced slicing 
+            ! try 1 contact slicing from right
+            call slice(g, E2, Slices) ! slicing from right to left
+            num_slices = size(Slices, 2)
+            if (((Slices(1,1)-1)<contactBlockSize(1)) .or. ((maxval(Slices(1,:))-minval(Slices(1,:)))>(2*minval(Slices(1,:))))) then
+                ! too small left contact , or very unbalanced slicing 
+                call slice(g, E1, E2, NMAX, Slices) ! try 2 contact slicing
+                num_slices = size(Slices, 2)
+            endif
+        endif
+        print *, ' Slicing info: ', num_slices,' slices, with block sizes = '
+        print '(12 I8)', slices(1,:)-1         
+        ! allocate the blocks : left extension|device|right extension
+        nx = ext(1) + num_slices + ext(2)
+        allocate (nmii(2, nx))
+        allocate (nm1i(2, nx))
+        nmii(:, 1:ext(1)) = contactBlockSize(1)
+        nmii(:, nx - ext(2) + 1:nx) = contactBlockSize(2)
         allocate (Hii(nx))
-        allocate (H1i(nx - 1))
-        num_slice = size(Slices, 2)
-        deallocate (H, col, row)
+        allocate (Sii(nx))
+        allocate (H1i(nx + 1))
+        call malloc(Hii, nx, nmii)
+        call malloc(Sii, nx, nmii)
+        call malloc(H1i, nx + 1, nm1i)
+        ! build the blocks
+        
+        deallocate (S, H, col, row, nmii, nm1i)
     end subroutine devH_build_fromCOOfile
 
-    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab,nk,k, lreorder_axis, axis)
+    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, nk, k, lreorder_axis, axis)
         use matrix_c, only: type_matrix_complex, malloc
         use wannierHam3d, only: w90_load_from_file, w90_free_memory, w90_MAT_DEF, nb
         character(len=*), intent(in)        :: fname !! input text file name
         logical, intent(in), optional :: lreorder_axis !! whether to reorder axis
         integer, intent(in), optional :: axis(3) !! permutation order
         integer, intent(in)::nx, nslab !! extension on left/right side
-        type(type_matrix_complex), dimension(:,:), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
-        type(type_matrix_complex), dimension(:,:), intent(inout), allocatable::Sii !! overlap matrix blocks
-        real(dp),intent(in)::k(2,nk)
-        integer,intent(in)::nk
+        type(type_matrix_complex), dimension(:, :), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
+        type(type_matrix_complex), dimension(:, :), intent(inout), allocatable::Sii !! overlap matrix blocks
+        real(dp), intent(in)::k(2, nk)
+        integer, intent(in)::nk
         ! ----
         complex(dp), allocatable, dimension(:, :)::H00, H10
         real(dp)::kx, ky, kz
-        integer::nm, i, im,ik
-        integer, dimension(nx+1)::nmm
+        integer::nm, i, im, ik
+        integer, dimension(nx + 1)::nmm
         open (unit=10, file=trim(fname), status='unknown')
         call w90_load_from_file(10, lreorder_axis, axis)
         close (10)
@@ -133,29 +199,29 @@ contains
         allocate (H10(nm, nm))
         kx = 0.0d0
 
-        allocate(Hii(nx,nk))
-        allocate(H1i(nx+1,nk))
-        allocate(Sii(nx,nk))
-        do ik=1,nk
-            ky=k(1,ik)
-            kz=k(2,ik)
+        allocate (Hii(nx, nk))
+        allocate (H1i(nx + 1, nk))
+        allocate (Sii(nx, nk))
+        do ik = 1, nk
+            ky = k(1, ik)
+            kz = k(2, ik)
             call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
             call w90_free_memory()
-    
-            call malloc(Hii(:,ik), nx, nmm(1:nx))        
-            call malloc(Sii(:,ik), nx, nmm(1:nx))
-            call malloc(H1i(:,ik), nx+1, nmm)
-    
+
+            call malloc(Hii(:, ik), nx, nmm(1:nx))
+            call malloc(Sii(:, ik), nx, nmm(1:nx))
+            call malloc(H1i(:, ik), nx + 1, nmm)
+
             do i = 1, nx
-                Hii(i,ik)%m = H00
-                H1i(i,ik)%m = H10
-                Sii(i,ik)%m = dcmplx(0.0d0, 0.0d0)
+                Hii(i, ik)%m = H00
+                H1i(i, ik)%m = H10
+                Sii(i, ik)%m = dcmplx(0.0d0, 0.0d0)
                 do im = 1, nm
-                    Sii(i,ik)%m(im, im) = 1.0d0
+                    Sii(i, ik)%m(im, im) = 1.0d0
                 end do
             end do
-            H1i(nx+1,ik)%m = H10
-        enddo
+            H1i(nx + 1, ik)%m = H10
+        end do
         deallocate (H00, H10)
     end subroutine devH_build_fromWannierFile
 
