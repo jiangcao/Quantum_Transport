@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 1.8% of total for modules and submodules.">50 statements</a>
+               title=" 2.2% of total for modules and submodules.">61 statements</a>
           </li>
 
             <li id="source-file">
@@ -331,7 +331,7 @@ modules which it uses.
         <section>
           <h2>Subroutines</h2>
               <div class="panel panel-default">
-    <div class="panel-heading codesum"><span class="anchor" id="proc-negf_solve"></span><h3>public  subroutine <a href='../proc/negf_solve.html'>negf_solve</a>(nx, Hii, H1i, Sii)  
+    <div class="panel-heading codesum"><span class="anchor" id="proc-negf_solve"></span><h3>public  subroutine <a href='../proc/negf_solve.html'>negf_solve</a>(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu)  
 </h3></div>
     <div class="panel-body">
           
@@ -366,11 +366,71 @@ modules which it uses.
         <tr>
             <td>
               <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nen</strong></td>
+            <td>
+<p>number of energy points        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nk</strong></td>
+            <td>
+<p>number of k points        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp)
+            </td>
+<td></td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>emin</strong></td>
+            <td>
+<p>min and max energy range        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp)
+            </td>
+<td></td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>emax</strong></td>
+            <td>
+<p>min and max energy range        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
               type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
 <td>intent(in),</td>
               <td></td>            <td>
-              dimension(nx)
+              dimension(nx,nk)
             </td>
             <td>::</td>
             <td><strong>Hii</strong></td>
@@ -385,7 +445,7 @@ modules which it uses.
             </td>
 <td>intent(in),</td>
               <td></td>            <td>
-              dimension(nx+1)
+              dimension(nx+1,nk)
             </td>
             <td>::</td>
             <td><strong>H1i</strong></td>
@@ -400,12 +460,42 @@ modules which it uses.
             </td>
 <td>intent(in),</td>
               <td></td>            <td>
-              dimension(nx)
+              dimension(nx,nk)
             </td>
             <td>::</td>
             <td><strong>Sii</strong></td>
             <td>
 
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              dimension(2)
+            </td>
+            <td>::</td>
+            <td><strong>temp</strong></td>
+            <td>
+<p>temperatures</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              dimension(2)
+            </td>
+            <td>::</td>
+            <td><strong>mu</strong></td>
+            <td>
+<p>chemical potentials</p>
             </td>
         </tr>
     </tbody>

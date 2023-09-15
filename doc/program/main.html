@@ -99,7 +99,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title="100.0% of total for programs.">25 statements</a>
+               title="100.0% of total for programs.">51 statements</a>
           </li>
 
             <li id="source-file">
@@ -140,6 +140,17 @@
             <a class="list-group-item" href="../program/main.html#variable-sii~4">Sii</a>
             <a class="list-group-item" href="../program/main.html#variable-nx~6">nx</a>
             <a class="list-group-item" href="../program/main.html#variable-ns~4">ns</a>
+            <a class="list-group-item" href="../program/main.html#variable-nen~2">nen</a>
+            <a class="list-group-item" href="../program/main.html#variable-nk~3">nk</a>
+            <a class="list-group-item" href="../program/main.html#variable-temp~2">temp</a>
+            <a class="list-group-item" href="../program/main.html#variable-mu~2">mu</a>
+            <a class="list-group-item" href="../program/main.html#variable-emin~2">emin</a>
+            <a class="list-group-item" href="../program/main.html#variable-emax~2">emax</a>
+            <a class="list-group-item" href="../program/main.html#variable-k~3">k</a>
+            <a class="list-group-item" href="../program/main.html#variable-file_path">file_path</a>
+            <a class="list-group-item" href="../program/main.html#variable-rc">rc</a>
+            <a class="list-group-item" href="../program/main.html#variable-fu">fu</a>
+            <a class="list-group-item" href="../program/main.html#variable-nomp">nomp</a>
             <a class="list-group-item" href="../program/main.html#variable-ierr">ierr</a>
             <a class="list-group-item" href="../program/main.html#variable-comm_size">comm_size</a>
             <a class="list-group-item" href="../program/main.html#variable-comm_rank">comm_rank</a>
@@ -188,9 +199,9 @@
       <ul class="list-group">
           <li class="list-group-item">
             <ul class="list-inline">
+                <li><a href='../module/negf_mod.html'>negf_mod</a></li>
                 <li><a href='../module/deviceham_mod.html'>deviceHam_mod</a></li>
                 <li><a href='../module/matrix_c.html'>matrix_c</a></li>
-                <li><a href='../module/negf_mod.html'>negf_mod</a></li>
             </ul>
           </li>
           <li class="list-group-item">
@@ -716,6 +727,17 @@ implementation in a submodule of an interface in a parent module.
             <a class="list-group-item" href="../program/main.html#variable-sii~4">Sii</a>
             <a class="list-group-item" href="../program/main.html#variable-nx~6">nx</a>
             <a class="list-group-item" href="../program/main.html#variable-ns~4">ns</a>
+            <a class="list-group-item" href="../program/main.html#variable-nen~2">nen</a>
+            <a class="list-group-item" href="../program/main.html#variable-nk~3">nk</a>
+            <a class="list-group-item" href="../program/main.html#variable-temp~2">temp</a>
+            <a class="list-group-item" href="../program/main.html#variable-mu~2">mu</a>
+            <a class="list-group-item" href="../program/main.html#variable-emin~2">emin</a>
+            <a class="list-group-item" href="../program/main.html#variable-emax~2">emax</a>
+            <a class="list-group-item" href="../program/main.html#variable-k~3">k</a>
+            <a class="list-group-item" href="../program/main.html#variable-file_path">file_path</a>
+            <a class="list-group-item" href="../program/main.html#variable-rc">rc</a>
+            <a class="list-group-item" href="../program/main.html#variable-fu">fu</a>
+            <a class="list-group-item" href="../program/main.html#variable-nomp">nomp</a>
             <a class="list-group-item" href="../program/main.html#variable-ierr">ierr</a>
             <a class="list-group-item" href="../program/main.html#variable-comm_size">comm_size</a>
             <a class="list-group-item" href="../program/main.html#variable-comm_rank">comm_rank</a>
@@ -774,7 +796,7 @@ implementation in a submodule of an interface in a parent module.
               type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
             <td>
-              allocatable, dimension(:)
+              allocatable, dimension(:,:)
             </td>
             <td>::</td>
             <td><strong>Hii</strong></td>
@@ -790,7 +812,7 @@ implementation in a submodule of an interface in a parent module.
               type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
             <td>
-              allocatable, dimension(:)
+              allocatable, dimension(:,:)
             </td>
             <td>::</td>
             <td><strong>H1i</strong></td>
@@ -806,7 +828,7 @@ implementation in a submodule of an interface in a parent module.
               type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
             <td>
-              allocatable, dimension(:)
+              allocatable, dimension(:,:)
             </td>
             <td>::</td>
             <td><strong>Sii</strong></td>
@@ -842,6 +864,182 @@ implementation in a submodule of an interface in a parent module.
             </td>
             <td>::</td>
             <td><strong>ns</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nen~2"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nen</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nk~3"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nk</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-temp~2"></span>
+              real(kind=8),
+            </td>
+            <td>
+              dimension(2)
+            </td>
+            <td>::</td>
+            <td><strong>temp</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mu~2"></span>
+              real(kind=8),
+            </td>
+            <td>
+              dimension(2)
+            </td>
+            <td>::</td>
+            <td><strong>mu</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-emin~2"></span>
+              real(kind=8)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>emin</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-emax~2"></span>
+              real(kind=8)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>emax</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-k~3"></span>
+              real(kind=8)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>k</strong>(2,1)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-file_path"></span>
+              character(len=10)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>file_path</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-rc"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>rc</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-fu"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>fu</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nomp"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nomp</strong></td>
                 <td></td>
                 <td></td>
             <td>
@@ -983,8 +1181,16 @@ implementation in a submodule of an interface in a parent module.
 
 <span class="w">    </span><span class="k">implicit none</span>
 
-<span class="k">    type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">dimension</span><span class="p">(:)</span><span class="kd">::</span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span>
-<span class="w">    </span><span class="kt">integer</span><span class="kd">::</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">ns</span>
+<span class="k">    type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">dimension</span><span class="p">(:,:)</span><span class="kd">::</span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span>
+<span class="w">    </span><span class="kt">integer</span><span class="kd">::</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">ns</span><span class="p">,</span><span class="w"> </span><span class="n">nen</span><span class="p">,</span><span class="n">nk</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span><span class="k">dimension</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="kd">::</span><span class="n">temp</span><span class="p">,</span><span class="n">mu</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="kd">::</span><span class="n">emin</span><span class="p">,</span><span class="n">emax</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="kd">::</span><span class="n">k</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="kd">::</span><span class="n">file_path</span>
+<span class="w">    </span><span class="kt">integer</span><span class="kd">::</span><span class="n">rc</span><span class="p">,</span><span class="n">fu</span>
+<span class="w">    </span><span class="kt">integer</span><span class="kd">::</span><span class="n">nomp</span><span class="w"> </span><span class="c">! openmp process number </span>
+
+<span class="w">    </span><span class="k">namelist</span><span class="w"> </span><span class="o">/</span><span class="n">input</span><span class="o">/</span><span class="w"> </span><span class="n">nx</span><span class="p">,</span><span class="n">ns</span><span class="p">,</span><span class="n">temp</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">nk</span><span class="p">,</span><span class="n">nomp</span><span class="p">,</span><span class="n">nen</span><span class="p">,</span><span class="n">emin</span><span class="p">,</span><span class="n">emax</span>
 
 <span class="w">    </span><span class="c">! MPI variables</span>
 <span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="nb">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="n">ierr</span>
@@ -999,16 +1205,42 @@ implementation in a submodule of an interface in a parent module.
 <span class="w">    </span><span class="k">include</span><span class="w"> </span><span class="s2">&quot;mpif.h&quot;</span>
 <span class="w">    </span><span class="k">call </span><span class="n">MPI_Init</span><span class="p">(</span><span class="n">ierr</span><span class="p">)</span>
 
+<span class="w">    </span><span class="c">! default values</span>
 <span class="w">    </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
 <span class="w">    </span><span class="n">ns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="n">temp</span><span class="o">=</span><span class="mi">30</span><span class="mf">0.0d0</span>
+<span class="w">    </span><span class="n">mu</span><span class="o">=</span><span class="mf">0.0d0</span>
+<span class="w">    </span><span class="n">nk</span><span class="o">=</span><span class="mi">1</span>
+<span class="w">    </span><span class="n">nen</span><span class="o">=</span><span class="mi">100</span>
+<span class="w">    </span><span class="n">emin</span><span class="o">=-</span><span class="mi">1</span><span class="mf">0.0d0</span>
+<span class="w">    </span><span class="n">emax</span><span class="o">=</span><span class="mf">5.0d0</span>
+<span class="w">    </span><span class="n">k</span><span class="o">=</span><span class="mf">0.0d0</span>
+<span class="w">    </span><span class="n">nomp</span><span class="o">=</span><span class="mi">4</span>
 
-<span class="w">    </span><span class="k">call </span><span class="n">devH_build_fromWannierFile</span><span class="p">(</span><span class="s1">&#39;ham_dat&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="w"> </span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">ns</span><span class="p">)</span>
+<span class="w">    </span><span class="c">! Check whether file exists.</span>
+<span class="w">    </span><span class="n">file_path</span><span class="o">=</span><span class="s1">&#39;input&#39;</span>
+<span class="w">    </span><span class="k">inquire</span><span class="w"> </span><span class="p">(</span><span class="k">file</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">rc</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">rc</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        write</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(&quot;Warn: input file &quot;, a, &quot; does not exist&quot;)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">file_path</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">        </span><span class="c">! Open and read Namelist file.</span>
+<span class="w">        </span><span class="k">open</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;read&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">file</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">rc</span><span class="p">,</span><span class="w"> </span><span class="n">newunit</span><span class="o">=</span><span class="n">fu</span><span class="p">)</span>
+<span class="w">        </span><span class="k">read</span><span class="w"> </span><span class="p">(</span><span class="n">nml</span><span class="o">=</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">rc</span><span class="p">,</span><span class="w"> </span><span class="n">unit</span><span class="o">=</span><span class="n">fu</span><span class="p">)</span>
+<span class="w">        </span><span class="k">close</span><span class="p">(</span><span class="n">fu</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    call </span><span class="n">omp_set_num_threads</span><span class="p">(</span><span class="n">nomp</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">call </span><span class="n">devH_build_fromWannierFile</span><span class="p">(</span><span class="s1">&#39;ham_dat&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="w"> </span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">ns</span><span class="p">,</span><span class="n">nk</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
 <span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="s2">&quot;solve&quot;</span>
-<span class="w">    </span><span class="k">call </span><span class="n">negf_solve</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">)</span>
+<span class="w">    </span><span class="k">call </span><span class="n">negf_solve</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">nen</span><span class="p">,</span><span class="n">nk</span><span class="p">,</span><span class="n">emin</span><span class="p">,</span><span class="n">emax</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="n">temp</span><span class="p">,</span><span class="n">mu</span><span class="p">)</span>
 
 <span class="w">    </span><span class="k">call </span><span class="n">free</span><span class="p">(</span><span class="n">Hii</span><span class="p">)</span>
 <span class="w">    </span><span class="k">call </span><span class="n">free</span><span class="p">(</span><span class="n">H1i</span><span class="p">)</span>
 <span class="w">    </span><span class="k">call </span><span class="n">free</span><span class="p">(</span><span class="n">Sii</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">deallocate</span><span class="p">(</span><span class="n">Hii</span><span class="p">,</span><span class="n">H1i</span><span class="p">,</span><span class="n">Sii</span><span class="p">)</span>
 
 <span class="k">END PROGRAM </span><span class="n">main</span>
 </pre></div>

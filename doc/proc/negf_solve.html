@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 2.1% of total for procedures.">43 statements</a>
+               title=" 2.7% of total for procedures.">54 statements</a>
           </li>
 
             <li id="source-file">
@@ -160,7 +160,7 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    <h2>public  subroutine negf_solve(nx, Hii, H1i, Sii)  
+    <h2>public  subroutine negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu)  
 </h2>
         <div class="panel panel-default">
       <div class="panel-heading">
@@ -169,8 +169,8 @@
       <ul class="list-group">
           <li class="list-group-item">
             <ul class="list-inline">
-                <li><a href='../module/matrix_c.html'>matrix_c</a></li>
                 <li><a href='../module/rgf_mod.html'>rgf_mod</a></li>
+                <li><a href='../module/matrix_c.html'>matrix_c</a></li>
             </ul>
           </li>
           <li class="list-group-item">
@@ -328,12 +328,72 @@ modules which it uses.
         </tr>
         <tr>
             <td>
+              <span class="anchor" id="variable-nen"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nen</strong></td>
+            <td>
+                <p>number of energy points        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nk"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nk</strong></td>
+            <td>
+                <p>number of k points        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-emin"></span>
+              real(kind=dp)
+            </td>
+<td></td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>emin</strong></td>
+            <td>
+                <p>min and max energy range        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-emax"></span>
+              real(kind=dp)
+            </td>
+<td></td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>emax</strong></td>
+            <td>
+                <p>min and max energy range        </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
               <span class="anchor" id="variable-hii~3"></span>
               type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
 <td>intent(in),</td>
               <td></td>            <td>
-              dimension(nx)
+              dimension(nx,nk)
             </td>
             <td>::</td>
             <td><strong>Hii</strong></td>
@@ -348,7 +408,7 @@ modules which it uses.
             </td>
 <td>intent(in),</td>
               <td></td>            <td>
-              dimension(nx+1)
+              dimension(nx+1,nk)
             </td>
             <td>::</td>
             <td><strong>H1i</strong></td>
@@ -363,12 +423,42 @@ modules which it uses.
             </td>
 <td>intent(in),</td>
               <td></td>            <td>
-              dimension(nx)
+              dimension(nx,nk)
             </td>
             <td>::</td>
             <td><strong>Sii</strong></td>
             <td>
                 
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-temp"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              dimension(2)
+            </td>
+            <td>::</td>
+            <td><strong>temp</strong></td>
+            <td>
+                <p>temperatures</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mu"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              dimension(2)
+            </td>
+            <td>::</td>
+            <td><strong>mu</strong></td>
+            <td>
+                <p>chemical potentials</p>
             </td>
         </tr>
     </tbody>
@@ -780,45 +870,63 @@ implementation in a submodule of an interface in a parent module.
     
     <section>
     <h2><span class="anchor" id="src"></span>Source Code</h2>
-    <div class="highlight"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">negf_solve</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">)</span>
+    <div class="highlight"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">negf_solve</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">nen</span><span class="p">,</span><span class="n">nk</span><span class="p">,</span><span class="n">emin</span><span class="p">,</span><span class="n">emax</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="n">temp</span><span class="p">,</span><span class="n">mu</span><span class="p">)</span>
 <span class="w">        </span><span class="k">use </span><span class="n">matrix_c</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">type_matrix_complex</span><span class="p">,</span><span class="n">malloc</span><span class="p">,</span><span class="n">free</span><span class="p">,</span><span class="n">sizeof</span>
 <span class="w">        </span><span class="k">use </span><span class="n">rgf_mod</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">rgf_variableblock_backward</span>
-<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span><span class="kd">::</span><span class="n">Hii</span><span class="p">,</span><span class="n">Sii</span>
-<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="kd">::</span><span class="n">H1i</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">nk</span><span class="p">)</span><span class="kd">::</span><span class="n">Hii</span><span class="p">,</span><span class="n">Sii</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">nk</span><span class="p">)</span><span class="kd">::</span><span class="n">H1i</span>
 <span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="kd">::</span><span class="n">nx</span><span class="w">  </span><span class="c">!! number of blocks        </span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="kd">::</span><span class="n">nen</span><span class="w">  </span><span class="c">!! number of energy points        </span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="kd">::</span><span class="n">nk</span><span class="w">  </span><span class="c">!! number of k points        </span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="k">dimension</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="kd">::</span><span class="n">temp</span><span class="w"> </span><span class="c">!! temperatures</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="k">dimension</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="kd">::</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="c">!! chemical potentials</span>
 <span class="w">        </span><span class="c">! ----</span>
-<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="k">allocatable</span><span class="p">,</span><span class="k">dimension</span><span class="p">(:)</span><span class="kd">::</span><span class="n">temp</span><span class="w"> </span><span class="c">!! temperatures</span>
-<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="k">allocatable</span><span class="p">,</span><span class="k">dimension</span><span class="p">(:)</span><span class="kd">::</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="c">!! chemical potentials</span>
 <span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="kd">::</span><span class="n">emin</span><span class="p">,</span><span class="n">emax</span><span class="w"> </span><span class="c">!! min and max energy range        </span>
-<span class="w">        </span><span class="kt">integer</span><span class="kd">::</span><span class="w"> </span><span class="n">nen</span><span class="w"> </span><span class="c">!! number of energy points</span>
-<span class="w">        </span><span class="kt">integer</span><span class="kd">::</span><span class="n">nm</span>
-<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="kd">::</span><span class="n">en</span>
+<span class="w">        </span><span class="kt">integer</span><span class="kd">::</span><span class="n">nm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">ik</span><span class="p">,</span><span class="n">ie</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="kd">::</span><span class="n">en</span><span class="p">,</span><span class="n">dE</span>
 <span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="k">dimension</span><span class="p">(:,:),</span><span class="k">allocatable</span><span class="kd">::</span><span class="n">mul</span><span class="p">,</span><span class="n">mur</span><span class="p">,</span><span class="n">templ</span><span class="p">,</span><span class="n">tempr</span>
-<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span><span class="kd">::</span><span class="n">sigma_lesser_ph</span><span class="p">,</span><span class="n">sigma_r_ph</span><span class="p">,</span><span class="n">G_r</span><span class="p">,</span><span class="n">G_lesser</span><span class="p">,</span><span class="n">G_greater</span><span class="p">,</span><span class="n">Jdens</span><span class="p">,</span><span class="n">Gl</span><span class="p">,</span><span class="n">Gln</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">nen</span><span class="p">,</span><span class="n">nk</span><span class="p">)</span><span class="kd">::</span><span class="n">sigma_lesser_ph</span><span class="p">,</span><span class="n">sigma_r_ph</span><span class="p">,</span><span class="n">G_r</span><span class="p">,</span><span class="n">G_lesser</span><span class="p">,</span><span class="n">G_greater</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="k">dimension</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span><span class="kd">::</span><span class="n">Jdens</span><span class="p">,</span><span class="n">Gl</span><span class="p">,</span><span class="n">Gln</span>
 <span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="kd">::</span><span class="n">tr</span><span class="p">,</span><span class="n">tre</span>
 <span class="w">        </span><span class="n">en</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0d0</span><span class="w"> </span>
-<span class="w">        </span><span class="n">nm</span><span class="o">=</span><span class="n">size</span><span class="p">(</span><span class="n">Hii</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">mul</span><span class="p">(</span><span class="n">nm</span><span class="p">,</span><span class="n">nm</span><span class="p">))</span>
-<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">templ</span><span class="p">(</span><span class="n">nm</span><span class="p">,</span><span class="n">nm</span><span class="p">))</span>
-<span class="w">        </span><span class="n">nm</span><span class="o">=</span><span class="n">size</span><span class="p">(</span><span class="n">Hii</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">mur</span><span class="p">(</span><span class="n">nm</span><span class="p">,</span><span class="n">nm</span><span class="p">))</span>
-<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">tempr</span><span class="p">(</span><span class="n">nm</span><span class="p">,</span><span class="n">nm</span><span class="p">))</span>
+<span class="w">        </span><span class="n">nm</span><span class="o">=</span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">(:,</span><span class="mi">1</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">mul</span><span class="p">(</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">templ</span><span class="p">(</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">mur</span><span class="p">(</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">),</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">)))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">tempr</span><span class="p">(</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">),</span><span class="n">nm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">)))</span>
 
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">sigma_lesser_ph</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">sigma_r_ph</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">G_r</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">G_lesser</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">G_greater</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">Jdens</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">Gl</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
-<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">Gln</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">sizeof</span><span class="p">(</span><span class="n">Hii</span><span class="p">))</span>
+<span class="w">        </span><span class="k">do </span><span class="n">ik</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">nk</span>
+<span class="w">            </span><span class="k">do </span><span class="n">ie</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">nen</span>
+<span class="w">                </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">sigma_lesser_ph</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">                </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">sigma_r_ph</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">                </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">G_r</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">                </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">G_lesser</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">                </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">G_greater</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">            </span><span class="k">enddo</span>
+<span class="k">        enddo</span>
+<span class="k">        call </span><span class="n">malloc</span><span class="p">(</span><span class="n">Jdens</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">Gl</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">malloc</span><span class="p">(</span><span class="n">Gln</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">nm</span><span class="p">)</span>
 
 <span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="s1">&#39;allocate memory done&#39;</span>
-<span class="w">        </span><span class="k">call </span><span class="n">rgf_variableblock_backward</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="n">mul</span><span class="p">,</span><span class="w"> </span><span class="n">mur</span><span class="p">,</span><span class="w"> </span><span class="n">TEMPl</span><span class="p">,</span><span class="w"> </span><span class="n">TEMPr</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="w"> </span><span class="n">sigma_lesser_ph</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
-<span class="w">            </span><span class="n">sigma_r_ph</span><span class="p">,</span><span class="w"> </span><span class="n">G_r</span><span class="p">,</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">,</span><span class="w"> </span><span class="n">G_greater</span><span class="p">,</span><span class="w"> </span><span class="n">Jdens</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">,</span><span class="w"> </span><span class="n">tr</span><span class="p">,</span><span class="w"> </span><span class="n">tre</span><span class="p">)</span>
 
-<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="s1">&#39;free memory&#39;</span>
+<span class="w">        </span><span class="n">dE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">emax</span><span class="o">-</span><span class="n">emin</span><span class="p">)</span><span class="o">/</span><span class="nb">dble</span><span class="p">(</span><span class="n">nen</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">do </span><span class="n">ik</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">nk</span>
+<span class="w">            </span><span class="c">!$omp parallel default(shared) private(ie,en)</span>
+<span class="w">            </span><span class="c">!$omp do </span>
+<span class="w">            </span><span class="k">do </span><span class="n">ie</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">nen</span>
+<span class="w">                </span><span class="n">En</span><span class="o">=</span><span class="n">emin</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">ie</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">dE</span>
+<span class="w">                </span><span class="k">call </span><span class="n">rgf_variableblock_backward</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="n">mul</span><span class="p">,</span><span class="w"> </span><span class="n">mur</span><span class="p">,</span><span class="w"> </span><span class="n">TEMPl</span><span class="p">,</span><span class="w"> </span><span class="n">TEMPr</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="w"> </span><span class="n">sigma_lesser_ph</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                    </span><span class="n">sigma_r_ph</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="w"> </span><span class="n">G_r</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="w"> </span><span class="n">G_greater</span><span class="p">(:,</span><span class="n">ie</span><span class="p">,</span><span class="n">ik</span><span class="p">),</span><span class="w"> </span><span class="n">Jdens</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">,</span><span class="w"> </span><span class="n">tr</span><span class="p">,</span><span class="w"> </span><span class="n">tre</span><span class="p">)</span>
+<span class="w">            </span><span class="k">enddo</span>
+<span class="w">            </span><span class="c">!$omp end do </span>
+<span class="w">            </span><span class="c">!$omp end parallel</span>
+<span class="w">        </span><span class="k">enddo</span>
+
+<span class="k">        print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="s1">&#39;free memory&#39;</span>
 <span class="w">        </span><span class="k">deallocate</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span><span class="n">mur</span><span class="p">,</span><span class="n">tempr</span><span class="p">,</span><span class="n">templ</span><span class="p">)</span>
+
 <span class="w">        </span><span class="k">call </span><span class="n">free</span><span class="p">(</span><span class="n">sigma_lesser_ph</span><span class="p">)</span>
 <span class="w">        </span><span class="k">call </span><span class="n">free</span><span class="p">(</span><span class="n">sigma_r_ph</span><span class="p">)</span>
 <span class="w">        </span><span class="k">call </span><span class="n">free</span><span class="p">(</span><span class="n">G_r</span><span class="p">)</span>

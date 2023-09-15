@@ -39,45 +39,63 @@ module negf_mod
 
 contains
 
-    subroutine negf_solve(nx, Hii, H1i, Sii)
+    subroutine negf_solve(nx,nen,nk,emin,emax, Hii, H1i, Sii,temp,mu)
         use matrix_c, only: type_matrix_complex,malloc,free,sizeof
         use rgf_mod, only: rgf_variableblock_backward
-        type(type_matrix_complex), intent(in), dimension(nx)::Hii,Sii
-        type(type_matrix_complex), intent(in), dimension(nx+1)::H1i
+        type(type_matrix_complex), intent(in), dimension(nx,nk)::Hii,Sii
+        type(type_matrix_complex), intent(in), dimension(nx+1,nk)::H1i
         integer, intent(in)::nx  !! number of blocks        
+        integer, intent(in)::nen  !! number of energy points        
+        integer, intent(in)::nk  !! number of k points        
+        real(dp),intent(in),dimension(2)::temp !! temperatures
+        real(dp),intent(in),dimension(2):: mu !! chemical potentials
         ! ----
-        real(dp),allocatable,dimension(:)::temp !! temperatures
-        real(dp),allocatable,dimension(:):: mu !! chemical potentials
         real(dp)::emin,emax !! min and max energy range        
-        integer:: nen !! number of energy points
-        integer::nm
-        real(dp)::en
+        integer::nm(2,nx), ik,ie
+        real(dp)::en,dE
         real(dp),dimension(:,:),allocatable::mul,mur,templ,tempr
-        type(type_matrix_complex),dimension(nx)::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater,Jdens,Gl,Gln
+        type(type_matrix_complex),dimension(nx,nen,nk)::sigma_lesser_ph,sigma_r_ph,G_r,G_lesser,G_greater
+        type(type_matrix_complex),dimension(nx)::Jdens,Gl,Gln
         real(dp)::tr,tre
         en = 0.0d0 
-        nm=size(Hii(1)%m,1)
-        allocate(mul(nm,nm))
-        allocate(templ(nm,nm))
-        nm=size(Hii(nx)%m,1)
-        allocate(mur(nm,nm))
-        allocate(tempr(nm,nm))
+        nm=sizeof(Hii(:,1))
+        allocate(mul(nm(1,1),nm(1,1)))
+        allocate(templ(nm(1,1),nm(1,1)))
+        allocate(mur(nm(1,nx),nm(1,nx)))
+        allocate(tempr(nm(1,nx),nm(1,nx)))
 
-        call malloc(sigma_lesser_ph,nx, sizeof(Hii))
-        call malloc(sigma_r_ph,nx, sizeof(Hii))
-        call malloc(G_r,nx, sizeof(Hii))
-        call malloc(G_lesser,nx, sizeof(Hii))
-        call malloc(G_greater,nx, sizeof(Hii))
-        call malloc(Jdens,nx, sizeof(Hii))
-        call malloc(Gl,nx, sizeof(Hii))
-        call malloc(Gln,nx, sizeof(Hii))
+        do ik=1,nk
+            do ie=1,nen
+                call malloc(sigma_lesser_ph(:,ie,ik),nx, nm)
+                call malloc(sigma_r_ph(:,ie,ik),nx, nm)
+                call malloc(G_r(:,ie,ik),nx, nm)
+                call malloc(G_lesser(:,ie,ik),nx, nm)
+                call malloc(G_greater(:,ie,ik),nx, nm)
+            enddo
+        enddo
+        call malloc(Jdens,nx, nm)
+        call malloc(Gl,nx, nm)
+        call malloc(Gln,nx, nm)
 
         print *,'allocate memory done'
-        call rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
-            sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)
+
+        dE = (emax-emin)/dble(nen-1)
+
+        do ik=1,nk
+            !$omp parallel default(shared) private(ie,en)
+            !$omp do 
+            do ie=1,nen
+                En=emin+dble(ie-1)*dE
+                call rgf_variableblock_backward(nx,En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph(:,ie,ik), &
+                    sigma_r_ph(:,ie,ik), G_r(:,ie,ik), G_lesser(:,ie,ik), G_greater(:,ie,ik), Jdens, Gl, Gln, tr, tre)
+            enddo
+            !$omp end do 
+            !$omp end parallel
+        enddo
 
         print *,'free memory'
         deallocate(mul,mur,tempr,templ)
+
         call free(sigma_lesser_ph)
         call free(sigma_r_ph)
         call free(G_r)
