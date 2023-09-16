@@ -8,7 +8,7 @@
     <meta name="author" content="Jiang Cao" >
     <link rel="icon" href="../favicon.png">
 
-    <title>matrix_list_size &ndash; Quantum transport simulator</title>
+    <title>convert_fromCOO &ndash; Quantum transport simulator</title>
 
     <link href="../css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/pygments.css" rel="stylesheet">
@@ -88,8 +88,8 @@
 
     <div class="container">
   <div class="row">
-    <h1>matrix_list_size
-      <small>Function</small>
+    <h1>convert_fromCOO
+      <small>Subroutine</small>
       
     </h1>
       <div class="row" id="info-bar">
@@ -100,18 +100,18 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 0.3% of total for procedures.">8 statements</a>
+               title=" 0.3% of total for procedures.">6 statements</a>
           </li>
 
             <li id="source-file">
               <i class="fa fa-code"></i>
-              <a href="../src/matrix_c.f90"> Source File</a>
+              <a href="../src/graph_partition.f90"> Source File</a>
             </li>
         </ul>
         <ol class="breadcrumb in-well text-right">
-              <li><a href='../sourcefile/matrix_c.f90.html'>matrix_c.f90</a></li>
-              <li><a href='../module/matrix_c.html'>matrix_c</a></li>
-          <li class="active">matrix_list_size</li>
+              <li><a href='../sourcefile/graph_partition.f90.html'>graph_partition.f90</a></li>
+              <li><a href='../module/graph_partition.html'>graph_partition</a></li>
+          <li class="active">convert_fromCOO</li>
         </ol>
       </div>
     </div>
@@ -150,7 +150,7 @@
     <div class="panel panel-primary">
       <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
       <div class="list-group">
-        <a class="list-group-item" href="../proc/matrix_list_size.html#src">matrix_list_size</a>
+        <a class="list-group-item" href="../proc/convert_fromcoo.html#src">convert_fromCOO</a>
       </div>
     </div>
 
@@ -160,10 +160,12 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    <h2>public pure function matrix_list_size(list, dim) result(nm)  
+    <h2>public  subroutine convert_fromCOO(nnz, row, col, g)  
 </h2>
     
 
+    <p>Subroutine convert a sparse matrix in COO format into a graph
+  The graph will be allocated inside the subroutine, so remember to deallocate the memory outside</p>
 
 
     <h3>Arguments</h3>
@@ -179,22 +181,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-list"></span>
-              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>list</strong>(:)</td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-dim"></span>
+              <span class="anchor" id="variable-nnz"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -202,21 +189,59 @@
               
             </td>
             <td>::</td>
-            <td><strong>dim</strong></td>
+            <td><strong>nnz</strong></td>
             <td>
                 
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-row~2"></span>
+              integer,
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              dimension(nnz)
+            </td>
+            <td>::</td>
+            <td><strong>row</strong></td>
+            <td>
+                <p>IA and JA index vectors of a CSR matrix</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-col~2"></span>
+              integer,
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              dimension(nnz)
+            </td>
+            <td>::</td>
+            <td><strong>col</strong></td>
+            <td>
+                <p>IA and JA index vectors of a CSR matrix</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-g~11"></span>
+              integer,
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>g</strong>(:,:)</td>
+            <td>
+                <p>Graph connectivity table</p>
             </td>
         </tr>
     </tbody>
   </table>
 
-      <h3>Return Value
-        <small>
-          <span class="anchor" id="variable-nm"></span>
-          integer, (size(list))
-        </small>
-      </h3>
-      
     <br>
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -228,32 +253,32 @@
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!-- Generated by graphviz version 9.0.0 (20230911.1827)
  -->
-<!-- Title: proc~~matrix_list_size~~CalledByGraph Pages: 1 -->
-<svg id="procmatrix_list_sizeCalledByGraph" width="261pt" height="31pt"
- viewBox="0.00 0.00 260.54 30.77" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="proc~~matrix_list_size~~CalledByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
-<title>proc~~matrix_list_size~~CalledByGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 256.54,-26.77 256.54,4 -4,4"/>
-<!-- proc~matrix_list_size -->
-<g id="proc~~matrix_list_size~~CalledByGraph_node1" class="node">
-<title>proc~matrix_list_size</title>
-<polygon fill="none" stroke="black" points="252.54,-22.77 121.77,-22.77 121.77,0 252.54,0 252.54,-22.77"/>
-<text text-anchor="middle" x="187.16" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">matrix_c::matrix_list_size</text>
+<!-- Title: proc~~convert_fromcoo~~CalledByGraph Pages: 1 -->
+<svg id="procconvert_fromcooCalledByGraph" width="437pt" height="31pt"
+ viewBox="0.00 0.00 436.79 30.77" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~convert_fromcoo~~CalledByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>proc~~convert_fromcoo~~CalledByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 432.79,-26.77 432.79,4 -4,4"/>
+<!-- proc~convert_fromcoo -->
+<g id="proc~~convert_fromcoo~~CalledByGraph_node1" class="node">
+<title>proc~convert_fromcoo</title>
+<polygon fill="none" stroke="black" points="428.79,-22.77 252.27,-22.77 252.27,0 428.79,0 428.79,-22.77"/>
+<text text-anchor="middle" x="340.53" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">graph_partition::convert_fromCOO</text>
 </g>
-<!-- interface~sizeof -->
-<g id="proc~~matrix_list_size~~CalledByGraph_node2" class="node">
-<title>interface~sizeof</title>
-<g id="a_proc~~matrix_list_size~~CalledByGraph_node2"><a xlink:href=".././interface/sizeof.html" xlink:title="matrix_c::sizeof">
-<polygon fill="#a7506f" stroke="#a7506f" points="85.77,-22.77 0,-22.77 0,0 85.77,0 85.77,-22.77"/>
-<text text-anchor="middle" x="42.88" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">matrix_c::sizeof</text>
+<!-- proc~devh_build_fromcoofile -->
+<g id="proc~~convert_fromcoo~~CalledByGraph_node2" class="node">
+<title>proc~devh_build_fromcoofile</title>
+<g id="a_proc~~convert_fromcoo~~CalledByGraph_node2"><a xlink:href=".././proc/devh_build_fromcoofile.html" xlink:title="deviceHam_mod::devH_build_fromCOOfile">
+<polygon fill="#d9534f" stroke="#d9534f" points="216.27,-22.77 0,-22.77 0,0 216.27,0 216.27,-22.77"/>
+<text text-anchor="middle" x="108.13" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">deviceHam_mod::devH_build_fromCOOfile</text>
 </a>
 </g>
 </g>
-<!-- interface~sizeof&#45;&gt;proc~matrix_list_size -->
-<g id="proc~~matrix_list_size~~CalledByGraph_edge1" class="edge">
-<title>interface~sizeof&#45;&gt;proc~matrix_list_size</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M86.19,-11.39C93.7,-11.39 101.73,-11.39 109.86,-11.39"/>
-<polygon fill="#000000" stroke="#000000" points="109.84,-14.89 119.84,-11.39 109.84,-7.89 109.84,-14.89"/>
+<!-- proc~devh_build_fromcoofile&#45;&gt;proc~convert_fromcoo -->
+<g id="proc~~convert_fromcoo~~CalledByGraph_edge1" class="edge">
+<title>proc~devh_build_fromcoofile&#45;&gt;proc~convert_fromcoo</title>
+<path fill="none" stroke="#000000" d="M216.58,-11.39C224.54,-11.39 232.55,-11.39 240.45,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="240.43,-14.89 250.43,-11.39 240.43,-7.89 240.43,-14.89"/>
 </g>
 </g>
 </svg>
@@ -356,7 +381,7 @@ implementation in a submodule of an interface in a parent module.
     <div class="panel panel-primary">
       <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
       <div class="list-group">
-        <a class="list-group-item" href="../proc/matrix_list_size.html#src">matrix_list_size</a>
+        <a class="list-group-item" href="../proc/convert_fromcoo.html#src">convert_fromCOO</a>
       </div>
     </div>
 
@@ -375,14 +400,15 @@ implementation in a submodule of an interface in a parent module.
     
     <section>
     <h2><span class="anchor" id="src"></span>Source Code</h2>
-    <div class="highlight"><pre><span></span><span class="w">    </span><span class="k">pure function </span><span class="n">matrix_list_size</span><span class="p">(</span><span class="n">list</span><span class="p">,</span><span class="w"> </span><span class="nb">dim</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span>
+    <div class="highlight"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">convert_fromCOO</span><span class="p">(</span><span class="n">nnz</span><span class="p">,</span><span class="w"> </span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">)</span>
+<span class="c">!! Subroutine convert a sparse matrix in COO format into a graph</span>
+<span class="c">!!   The graph will be allocated inside the subroutine, so remember to deallocate the memory outside</span>
 <span class="w">        </span><span class="k">implicit none</span>
-<span class="k">        type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">list</span><span class="p">(:)</span>
-<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="kd">::</span><span class="w"> </span><span class="nb">dim</span>
-<span class="nb">        </span><span class="kt">INTEGER</span><span class="w">  </span><span class="kd">::</span><span class="w"> </span><span class="n">nm</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">list</span><span class="p">))</span>
-<span class="w">        </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ii</span>
-<span class="w">        </span><span class="k">forall</span><span class="w"> </span><span class="p">(</span><span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span><span class="n">size</span><span class="p">(</span><span class="n">list</span><span class="p">))</span><span class="w"> </span><span class="n">nm</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">list</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">size</span><span class="p">(</span><span class="nb">dim</span><span class="p">)</span>
-<span class="w">    </span><span class="k">end function </span><span class="n">matrix_list_size</span>
+<span class="k">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">nnz</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="n">nnz</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="c">!! IA and JA index vectors of a CSR matrix</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">g</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span><span class="w">  </span><span class="c">!! Graph connectivity table</span>
+
+<span class="w">    </span><span class="k">end subroutine </span><span class="n">convert_fromCOO</span>
 </pre></div>
 
     </section>

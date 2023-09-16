@@ -53,7 +53,7 @@ contains
         integer, intent(in)::nslab  !! number of cells in a slab
         real(dp), intent(in), dimension(2)::temp !! temperatures
         real(dp), intent(in), dimension(2):: mu !! chemical potentials
-        real(dp), intent(in):: Lx !! Lx 
+        real(dp), intent(in):: Lx !! Lx
         ! ----
         real(dp)::emin, emax !! min and max energy range
         integer::nm(2, nx), ik, ie, iter, NB, NS, i
@@ -96,7 +96,7 @@ contains
         !
         if (comm_rank == 0) then
             print *, 'allocate memory done'
-        end if                
+        end if
         !
         dE = (emax - emin)/dble(nen - 1)
         forall (ie=1:nen) En(ie) = emin + dble(ie - 1)*dE  ! global energy vector
@@ -109,9 +109,10 @@ contains
             !!!$omp parallel default(shared) private(ie)
             !!!$omp do
             do ie = 1, local_NE
-        call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, Hii(:,ik), H1i(:,ik), Sii(:,ik), sigma_lesser_ph(:, ie, ik), &
-                                                sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
-                                                Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
+                call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
+                                               Hii(:, ik), H1i(:, ik), Sii(:, ik), sigma_lesser_ph(:, ie, ik), &
+                                               sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
+                                               Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
             end do
             !!!$omp end do
             !!!$omp end parallel

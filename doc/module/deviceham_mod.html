@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 4.3% of total for modules and submodules.">119 statements</a>
+               title=" 6.2% of total for modules and submodules.">189 statements</a>
           </li>
 
             <li id="source-file">
@@ -333,7 +333,7 @@ modules which it uses.
         <section>
           <h2>Subroutines</h2>
               <div class="panel panel-default">
-    <div class="panel-heading codesum"><span class="anchor" id="proc-devh_build_fromcoofile"></span><h3>public  subroutine <a href='../proc/devh_build_fromcoofile.html'>devH_build_fromCOOfile</a>(fname, Hii, H1i, ext_left, ext_right, num_slice, use0index, complex, threshold)  
+    <div class="panel-heading codesum"><span class="anchor" id="proc-devh_build_fromcoofile"></span><h3>public  subroutine <a href='../proc/devh_build_fromcoofile.html'>devH_build_fromCOOfile</a>(hfname, sfname, Hii, H1i, Sii, ext, contactBlockSize, nx, use0index, iscomplex, threshold)  
 </h3></div>
     <div class="panel-body">
           
@@ -360,9 +360,24 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>fname</strong></td>
+            <td><strong>hfname</strong></td>
             <td>
-<p>input text file name</p>
+<p>input H file name</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sfname</strong></td>
+            <td>
+<p>input S file name</p>
             </td>
         </tr>
         <tr>
@@ -398,16 +413,16 @@ modules which it uses.
         <tr>
             <td>
               <span class="anchor" ></span>
-              integer,
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
             </td>
-<td>intent(in)</td>
+<td>intent(inout),</td>
               <td></td>            <td>
-              
+              dimension(:), allocatable
             </td>
             <td>::</td>
-            <td><strong>ext_left</strong></td>
+            <td><strong>Sii</strong></td>
             <td>
-<p>extension on left/right side</p>
+<p>Hamiltonian blocks</p>
             </td>
         </tr>
         <tr>
@@ -420,9 +435,24 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>ext_right</strong></td>
+            <td><strong>ext</strong>(2)</td>
             <td>
-<p>extension on left/right side</p>
+<p>number of extension blocks on left/right side</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>contactBlockSize</strong>(2)</td>
+            <td>
+<p>number of orbitals in the contact block</p>
             </td>
         </tr>
         <tr>
@@ -435,9 +465,9 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>num_slice</strong></td>
+            <td><strong>nx</strong></td>
             <td>
-<p>number of slices in the central part</p>
+<p>total number of slices</p>
             </td>
         </tr>
         <tr>
@@ -465,7 +495,7 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>complex</strong></td>
+            <td><strong>iscomplex</strong></td>
             <td>
 
             </td>
@@ -493,7 +523,7 @@ modules which it uses.
   </div>
 
               <div class="panel panel-default">
-    <div class="panel-heading codesum"><span class="anchor" id="proc-devh_build_fromwannierfile"></span><h3>public  subroutine <a href='../proc/devh_build_fromwannierfile.html'>devH_build_fromWannierFile</a>(fname, Hii, H1i, Sii, nx, nslab, nk, k, lreorder_axis, axis)  
+    <div class="panel-heading codesum"><span class="anchor" id="proc-devh_build_fromwannierfile"></span><h3>public  subroutine <a href='../proc/devh_build_fromwannierfile.html'>devH_build_fromWannierFile</a>(fname, Hii, H1i, Sii, nx, nslab, nband, nk, k, length_x, lreorder_axis, axis)  
 </h3></div>
     <div class="panel-body">
           
@@ -532,7 +562,7 @@ modules which it uses.
             </td>
 <td>intent(inout),</td>
               <td></td>            <td>
-              dimension(:,:), allocatable
+              dimension(:, :), allocatable
             </td>
             <td>::</td>
             <td><strong>Hii</strong></td>
@@ -547,7 +577,7 @@ modules which it uses.
             </td>
 <td>intent(inout),</td>
               <td></td>            <td>
-              dimension(:,:), allocatable
+              dimension(:, :), allocatable
             </td>
             <td>::</td>
             <td><strong>H1i</strong></td>
@@ -562,7 +592,7 @@ modules which it uses.
             </td>
 <td>intent(inout),</td>
               <td></td>            <td>
-              dimension(:,:), allocatable
+              dimension(:, :), allocatable
             </td>
             <td>::</td>
             <td><strong>Sii</strong></td>
@@ -582,7 +612,7 @@ modules which it uses.
             <td>::</td>
             <td><strong>nx</strong></td>
             <td>
-<p>extension on left/right side</p>
+<p>number of slabs</p>
             </td>
         </tr>
         <tr>
@@ -597,7 +627,22 @@ modules which it uses.
             <td>::</td>
             <td><strong>nslab</strong></td>
             <td>
-<p>extension on left/right side</p>
+<p>number of cells per slab</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nband</strong></td>
+            <td>
+<p>number of bands/orbitals per cell (from wannier90)</p>
             </td>
         </tr>
         <tr>
@@ -626,6 +671,21 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>k</strong>(2,nk)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>length_x</strong></td>
             <td>
 
             </td>

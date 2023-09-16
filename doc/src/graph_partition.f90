@@ -37,6 +37,7 @@ module graph_partition
     private
     public :: AddEdge, ReadGraphFromText, SaveSlicesTxt, SaveTxtGraph, testSlicing, slice
     public :: getPointsInAllSlices, getPointsInSlice, ReadEdgeFromText
+    public :: convert_fromCOO
 
     integer, parameter :: dp = 8
 
@@ -439,6 +440,7 @@ contains
         do i = 1, maxval(D)
             if (COUNT(D == i) > NP) NP = COUNT(D == i)
         end do
+        if (allocated(S)) deallocate(S)
         allocate (S(NP + 1, maxval(D)))
         S = 1
         do i = 1, size(g, dim=2)
@@ -526,6 +528,7 @@ contains
         if (allocated(PT)) deallocate (PT, stat=err)
         if (err /= 0) print *, "PT: Deallocation request denied"
         ! Merge the results of 2 parts
+        if (allocated(S)) deallocate(S)
         allocate (S(max(size(S1, 1), size(S2, 1)), size(S1, 2) + size(S2, 2)))
         S = -1
         ! -1 to indicate no number
@@ -581,14 +584,14 @@ contains
         end do
     end Function SliceNum
 
-    subroutine ConvertSparseMatrixToGraph(nnz, IA, JA, G)
-!! Subroutine convert a sparse matrix in CSR format into a graph
+    subroutine convert_fromCOO(nnz, row, col, g)
+!! Subroutine convert a sparse matrix in COO format into a graph
 !!   The graph will be allocated inside the subroutine, so remember to deallocate the memory outside
         implicit none
         integer, intent(in) :: nnz
-        integer, intent(in), dimension(nnz) :: IA, JA !! IA and JA index vectors of a CSR matrix
+        integer, intent(in), dimension(nnz) :: row, col !! IA and JA index vectors of a CSR matrix
         integer, allocatable, intent(out) :: g(:, :)  !! Graph connectivity table
 
-    end subroutine ConvertSparseMatrixToGraph
+    end subroutine convert_fromCOO
 
 end module graph_partition

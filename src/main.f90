@@ -29,7 +29,7 @@ PROGRAM main
 
     use negf_mod, only: negf_solve
     use matrix_c, only: type_matrix_complex, free
-    use deviceHam_mod, only: devH_build_fromWannierFile    
+    use deviceHam_mod, only: devH_build_fromWannierFile
 
     implicit none
 
@@ -47,30 +47,28 @@ PROGRAM main
     ! MPI variables
     integer(kind=4) ierr
     integer(kind=4) comm_size
-    integer(kind=4) comm_rank    
+    integer(kind=4) comm_rank
     integer(kind=4) local_NE
     integer(kind=4) first_local_energy
 
     include "mpif.h"
     call MPI_Init(ierr)
     call MPI_Comm_size(MPI_COMM_WORLD, comm_size, ierr)
-call MPI_Comm_rank(MPI_COMM_WORLD, comm_rank, ierr)
+    call MPI_Comm_rank(MPI_COMM_WORLD, comm_rank, ierr)
 
-call MPI_Barrier(MPI_COMM_WORLD, ierr)
+    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
-if (comm_rank == 0) then
-  print *, 'Comm Size =', comm_size
-else
-  print *, 'Comm Rank =', comm_rank
-endif
-
-    
+    if (comm_rank == 0) then
+        print *, 'Comm Size =', comm_size
+    else
+        print *, 'Comm Rank =', comm_rank
+    end if
 
     ! default values
     nx = 5
     ns = 3
     temp = 300.0d0
-    mu = 0.0d0 
+    mu = 0.0d0
     nk = 1
     nen = 100
     emin = -10.0d0
@@ -92,15 +90,15 @@ endif
     end if
 
     call omp_set_num_threads(nomp)
-    local_NE = nen / comm_size
-first_local_energy = local_NE * comm_rank + 1
+    local_NE = nen/comm_size
+    first_local_energy = local_NE*comm_rank + 1
 
-    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns, nb, nk,&
-    k,Lx)
+    call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns, nb, nk, &
+                                    k, Lx)
     print *, "solve"
     call negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
-                    comm_size, comm_rank, local_NE, first_local_energy, NB,&
-                NS,Lx)
+                    comm_size, comm_rank, local_NE, first_local_energy, NB, &
+                    NS, Lx)
 
     call free(Hii)
     call free(H1i)

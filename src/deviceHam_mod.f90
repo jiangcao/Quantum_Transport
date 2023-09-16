@@ -205,7 +205,7 @@ contains
         complex(dp), allocatable, dimension(:, :)::H00, H10
         real(dp)::kx, ky, kz
         integer::nm, i, im, ik
-        integer, dimension(2,nx + 1)::nmm
+        integer, dimension(2, nx + 1)::nmm
         open (unit=10, file=trim(fname), status='unknown')
         call w90_load_from_file(10, lreorder_axis, axis)
         close (10)
@@ -225,8 +225,8 @@ contains
             kz = k(2, ik)
             call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
             !
-            call malloc(Hii(:, ik), nx, nmm(:,1:nx))
-            call malloc(Sii(:, ik), nx, nmm(:,1:nx))
+            call malloc(Hii(:, ik), nx, nmm(:, 1:nx))
+            call malloc(Sii(:, ik), nx, nmm(:, 1:nx))
             call malloc(H1i(:, ik), nx + 1, nmm)
             !
             do i = 1, nx

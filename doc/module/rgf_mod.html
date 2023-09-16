@@ -100,7 +100,7 @@
           <li id="statements"><i class="fa fa-list-ol"></i>
             <a data-toggle="tooltip"
                data-placement="bottom" data-html="true"
-               title=" 8.4% of total for modules and submodules.">229 statements</a>
+               title="12.4% of total for modules and submodules.">379 statements</a>
           </li>
 
             <li id="source-file">
@@ -147,6 +147,7 @@
       </div>
       <div id="subs-0" class="panel-collapse collapse">
         <div class="list-group">
+            <a class="list-group-item" href="../module/rgf_mod.html#proc-rgf_variableblock_forward">rgf_variableblock_forward</a>
             <a class="list-group-item" href="../module/rgf_mod.html#proc-rgf_variableblock_backward">rgf_variableblock_backward</a>
         </div>
       </div>
@@ -166,7 +167,8 @@
 
     <div class="col-md-9" id='text'>
       <p>Recursive  Green's  function  solvers module</p>
-<p>Recursive Backward Green's solver
+<p>Recursive Forward Green's solver
+ Recursive Backward Green's solver
  Fermi distribution function
  Sancho-Rubio</p>
 <br>      
@@ -308,6 +310,7 @@ modules which it uses.
       </div>
       <div id="subs-1" class="panel-collapse collapse">
         <div class="list-group">
+            <a class="list-group-item" href="../module/rgf_mod.html#proc-rgf_variableblock_forward">rgf_variableblock_forward</a>
             <a class="list-group-item" href="../module/rgf_mod.html#proc-rgf_variableblock_backward">rgf_variableblock_backward</a>
         </div>
       </div>
@@ -334,6 +337,335 @@ modules which it uses.
         <section>
           <h2>Subroutines</h2>
               <div class="panel panel-default">
+    <div class="panel-heading codesum"><span class="anchor" id="proc-rgf_variableblock_forward"></span><h3>public  subroutine <a href='../proc/rgf_variableblock_forward.html'>rgf_variableblock_forward</a>(nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)  
+</h3></div>
+    <div class="panel-body">
+          
+  <p>
+<script type="math/tex; mode=display">H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)</script>
+<script type="math/tex; mode=display">\Sigma^R = H(i,i+1) * G00 * H(i+1,i)</script>
+<script type="math/tex; mode=display">Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}</script>
+<script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma^R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger</script>
+<script type="math/tex; mode=display">H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)</script>
+<script type="math/tex; mode=display">Gl(i) = [E*S(i,i) - H00 - H(i,i-1) * Gl(i-1) * H(i-1,i)]^{-1}</script>
+<script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger</script>
+<script type="math/tex; mode=display">\Sigma^< = \Sigma_11^< + \Sigma_{ph}^< + \Sigma_s^<</script>
+<script type="math/tex; mode=display">G^< = G * \Sigma^< * G^\dagger</script>
+<script type="math/tex; mode=display">A = G^<(i+1) * H(i+1,i) * Gl(i)^\dagger + G(i+1) * H(i+1,i) * Gln(i)</script>
+<script type="math/tex; mode=display">B = H(i,i+1) * A</script>
+<script type="math/tex; mode=display">Jdens(i) = -2 * B</script>
+<script type="math/tex; mode=display">GN0 = Gl(i) * H(i,i+1) * G(i+1)</script>
+<script type="math/tex; mode=display">G(i) = Gl(i) + GN0 * H(i+1,i) * Gl(i)</script>
+<script type="math/tex; mode=display">G^<(i) = Gln(i) + Gl(i) * H(i,i+1) * G^<(i+1) * H(i+1,i) *Gl(i)^\dagger</script>
+<script type="math/tex; mode=display">G^<(i) = G^<(i) + GN0 * H(i+1,i) * Gln(i)</script>
+<script type="math/tex; mode=display">G^<(i) = G^<(i) + Gln(i) * H(i,i+1) * GN0</script>
+<script type="math/tex; mode=display">G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]</script>
+</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nx</strong></td>
+            <td>
+<p>lenght of the device</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>En</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mul</strong>(:,:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mur</strong>(:,:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>TEMPl</strong>(:,:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>TEMPr</strong>(:,:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Hii</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>H1i</strong>(nx+1)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Sii</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sigma_lesser_ph</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sigma_r_ph</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>G_r</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>G_lesser</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>G_greater</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Jdens</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Gl</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Gln</strong>(nx)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>tr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>tre</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="panel panel-default">
     <div class="panel-heading codesum"><span class="anchor" id="proc-rgf_variableblock_backward"></span><h3>public  subroutine <a href='../proc/rgf_variableblock_backward.html'>rgf_variableblock_backward</a>(nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)  
 </h3></div>
     <div class="panel-body">
@@ -354,7 +686,7 @@ modules which it uses.
 <script type="math/tex; mode=display">GN0 = Gl(i) * H(i,i-1) * G(i-1)</script>
 <script type="math/tex; mode=display">G(i) = Gl(i) + GN0 * H(i-1,i) * Gl(i)</script>
 <script type="math/tex; mode=display">G^<(i) = Gln(i) + Gl(i) * H(i,i-1) * G^<(i-1) * H(i-1,i) *Gl(i)^\dagger</script>
-<script type="math/tex; mode=display">G^<(i) = G^<(i) + GNO * H(i-1,i) * Gln(i)</script>
+<script type="math/tex; mode=display">G^<(i) = G^<(i) + GN0 * H(i-1,i) * Gln(i)</script>
 <script type="math/tex; mode=display">G^<(i) = G^<(i) + Gln(i) * H(i,i-1) * GN0</script>
 <script type="math/tex; mode=display">G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]</script>
 </p>
