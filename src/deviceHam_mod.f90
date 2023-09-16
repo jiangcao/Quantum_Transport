@@ -168,12 +168,13 @@ contains
         allocate (nmii(2, nx))
         allocate (nm1i(2, nx + 1))
         nmii(:, 1:ext(1)) = contactBlockSize(1)
-        nmii(:, nx - ext(2) + 1:nx) = contactBlockSize(2)
-        nmii(:, ext(1):nx - ext(2)) = Slices(1, :) - 1
+        nmii(:, (nx - ext(2) + 1):nx) = contactBlockSize(2)
+        nmii(1, ext(1):(nx - ext(2))) = Slices(1, :) - 1
+        nmii(2, ext(1):(nx - ext(2))) = Slices(1, :) - 1
         nm1i(:, 1) = nmii(:, 1)
         nm1i(:, nx + 1) = nmii(:, nx)
         nm1i(1, 2:nx) = nmii(1, 2:nx)
-        nm1i(2, 2:nx) = nmii(1, 1:nx - 1)
+        nm1i(2, 2:nx) = nmii(1, 1:(nx - 1))
         allocate (Hii(nx))
         allocate (Sii(nx))
         allocate (H1i(nx + 1))
@@ -186,9 +187,9 @@ contains
         if (present(sfname)) deallocate (S)
     end subroutine devH_build_fromCOOfile
 
-    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, nband, nk, k, lreorder_axis, axis)
+    subroutine devH_build_fromWannierFile(fname, Hii, H1i, Sii, nx, nslab, nband, nk, k, length_x, lreorder_axis, axis)
         use matrix_c, only: type_matrix_complex, malloc
-        use wannierHam3d, only: w90_load_from_file, w90_free_memory, w90_MAT_DEF, nb
+        use wannierHam3d, only: w90_load_from_file, w90_free_memory, w90_MAT_DEF, nb, Lx
         character(len=*), intent(in)        :: fname !! input text file name
         logical, intent(in), optional :: lreorder_axis !! whether to reorder axis
         integer, intent(in), optional :: axis(3) !! permutation order
@@ -198,18 +199,20 @@ contains
         type(type_matrix_complex), dimension(:, :), intent(inout), allocatable::Hii, H1i !! Hamiltonian blocks
         type(type_matrix_complex), dimension(:, :), intent(inout), allocatable::Sii !! overlap matrix blocks
         real(dp), intent(in)::k(2, nk)
+        real(dp), intent(out)::length_x
         integer, intent(in)::nk
         ! ----
         complex(dp), allocatable, dimension(:, :)::H00, H10
         real(dp)::kx, ky, kz
         integer::nm, i, im, ik
-        integer, dimension(nx + 1)::nmm
+        integer, dimension(2,nx + 1)::nmm
         open (unit=10, file=trim(fname), status='unknown')
         call w90_load_from_file(10, lreorder_axis, axis)
         close (10)
         nm = nb*nslab
         nband = nb
-        nmm(:) = nm
+        length_x = Lx
+        nmm = nm
         allocate (H00(nm, nm))
         allocate (H10(nm, nm))
         kx = 0.0d0
@@ -221,10 +224,9 @@ contains
             ky = k(1, ik)
             kz = k(2, ik)
             call w90_MAT_DEF(H00, H10, kx, ky, kz, nslab)
-            call w90_free_memory()
             !
-            call malloc(Hii(:, ik), nx, nmm(1:nx))
-            call malloc(Sii(:, ik), nx, nmm(1:nx))
+            call malloc(Hii(:, ik), nx, nmm(:,1:nx))
+            call malloc(Sii(:, ik), nx, nmm(:,1:nx))
             call malloc(H1i(:, ik), nx + 1, nmm)
             !
             do i = 1, nx
@@ -238,6 +240,7 @@ contains
             H1i(nx + 1, ik)%m = H10
         end do
         deallocate (H00, H10)
+        call w90_free_memory()
     end subroutine devH_build_fromWannierFile
 
 end module deviceHam_mod

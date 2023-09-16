@@ -39,9 +39,9 @@ module negf_mod
 contains
 
     subroutine negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
-                          comm_size, comm_rank, local_NE, first_local_energy, nbnd, nslab)
+                          comm_size, comm_rank, local_NE, first_local_energy, nbnd, nslab, Lx)
         use matrix_c, only: type_matrix_complex, malloc, free, sizeof
-        use rgf_mod, only: rgf_variableblock_backward
+        use rgf_mod, only: rgf_variableblock_forward
         use Output, only: write_spectrum_summed_over_k
         type(type_matrix_complex), intent(in), dimension(nx, nk)::Hii, Sii
         type(type_matrix_complex), intent(in), dimension(nx + 1, nk)::H1i
@@ -53,9 +53,11 @@ contains
         integer, intent(in)::nslab  !! number of cells in a slab
         real(dp), intent(in), dimension(2)::temp !! temperatures
         real(dp), intent(in), dimension(2):: mu !! chemical potentials
+        real(dp), intent(in):: Lx !! Lx 
         ! ----
         real(dp)::emin, emax !! min and max energy range
-        integer::nm(2, nx), ik, ie, iter, NB(nx), NS(nx)
+        integer::nm(2, nx), ik, ie, iter, NB, NS, i
+        integer(kind=4)::ierr
         real(dp)::en(nen), dE, local_energies(local_NE)
         real(dp), dimension(:, :), allocatable::mul, mur, templ, tempr
         type(type_matrix_complex), dimension(nx, local_NE, nk)::sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater
@@ -66,6 +68,7 @@ contains
         character(len=4) :: rank_str
         logical::append
         !
+        include "mpif.h"
         fmt = '(I4.4)'
         write (rank_str, fmt) comm_rank
         append = (comm_rank /= 0)
@@ -93,7 +96,7 @@ contains
         !
         if (comm_rank == 0) then
             print *, 'allocate memory done'
-        end if
+        end if                
         !
         dE = (emax - emin)/dble(nen - 1)
         forall (ie=1:nen) En(ie) = emin + dble(ie - 1)*dE  ! global energy vector
@@ -103,19 +106,19 @@ contains
         !
         iter = 0
         do ik = 1, nk
-            !$omp parallel default(shared) private(ie,en)
-            !$omp do
+            !!!$omp parallel default(shared) private(ie)
+            !!!$omp do
             do ie = 1, local_NE
-        call rgf_variableblock_backward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph(:, ie, ik), &
+        call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, Hii(:,ik), H1i(:,ik), Sii(:,ik), sigma_lesser_ph(:, ie, ik), &
                                                 sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
                                                 Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
             end do
-            !$omp end do
-            !$omp end parallel
+            !!!$omp end do
+            !!!$omp end parallel
         end do
         !
-        NS(:) = nslab
-        NB(:) = nbnd
+        NS = 3
+        NB = 32
         do i = 0, comm_size - 1
             if (i == comm_rank) then
                 filename = 'ldos'
@@ -125,7 +128,7 @@ contains
                 call write_spectrum_summed_over_k(filename, iter, G_lesser, local_NE, local_energies, &
                                                   nk, nx, NB, NS, Lx, (/1.0d0, 1.0d0/), append)
                 filename = 'pdos'
-                call write_spectrum_summed_over_k(filename, iter, G_lesser, local_NE, local_energies, &
+                call write_spectrum_summed_over_k(filename, iter, G_greater, local_NE, local_energies, &
                                                   nk, nx, NB, NS, Lx, (/1.0d0, -1.0d0/), append)
             end if
             call MPI_Barrier(MPI_COMM_WORLD, ierr)

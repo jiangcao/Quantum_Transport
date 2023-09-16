@@ -1,7 +1,10 @@
 &input
-nx=10
-nen=2000
-emin=-15
-emax=5
-nomp=10
+ns=3
+nx=5
+nen=200
+emin=-6
+emax=-1
+nomp=4
+mu(:) = -3.7,-3.7
+temp(:) = 300.0, 300.0 
 /

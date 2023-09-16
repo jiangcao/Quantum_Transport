@@ -24,7 +24,6 @@
 ! CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ! ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ! POSSIBILITY OF SUCH DAMAGE.
-
 module matrix_c
 !! Complex Matrix Library
 !! A 2D complex array, element to form a list/table of complex matrices
@@ -526,14 +525,14 @@ contains
         integer :: info, n
         integer :: ipiv(size(A, 1))
         complex(8), dimension(size(A, dim=1), size(A, dim=1)) :: array_inverse
-        complex(8), allocatable :: work(:, :)
+        complex(8), allocatable :: work(:)
         n = size(A, 1)
         if (n /= size(A, 2)) then
             print *, '@array_inverse, size not square', n, size(A, 2)
             call abort()
         end if
         array_inverse(:, :) = A(:, :)
-        allocate (work(n*n, n*n))
+        allocate (work(n*n))
         call zgetrf(n, n, array_inverse, n, ipiv, info)
         if (info .ne. 0) then
             print *, '@array_inverse ZGETRF fails with INFO=', info
