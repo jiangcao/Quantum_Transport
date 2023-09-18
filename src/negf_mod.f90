@@ -68,7 +68,7 @@ contains
         character(len=4) :: rank_str
         logical::append
         !
-        include "mpif.h"
+!        include "mpif.h"
         fmt = '(I4.4)'
         write (rank_str, fmt) comm_rank
         append = (comm_rank /= 0)
@@ -106,7 +106,7 @@ contains
         call malloc(Jdens, nx, nm)
         call malloc(Gl, nx, nm)
         call malloc(Gln, nx, nm)
-        !$omp do
+        !$omp target teams map(to: nx, local_energies, mul, mur, TEMPl, TEMPr, Hii,H1i,Sii,sigma_lesser_ph,sigma_r_ph) map(from:G_r,G_lesser,G_greater,tr,tre)
         do ie = 1, local_NE
             do ik = 1, nk
                 call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
@@ -115,7 +115,7 @@ contains
                     Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
             end do
         end do
-        !$omp end do
+        !$omp end target teams
         call free(Jdens)
         call free(Gl)
         call free(Gln)
@@ -135,7 +135,7 @@ contains
                 call write_spectrum_summed_over_k(filename, iter, G_greater, local_NE, local_energies, &
                                                   nk, nx, NB, NS, Lx, (/1.0d0, -1.0d0/), append)
             end if
-            call MPI_Barrier(MPI_COMM_WORLD, ierr)
+!            call MPI_Barrier(MPI_COMM_WORLD, ierr)
         end do
         !
         if (comm_rank == 0) then

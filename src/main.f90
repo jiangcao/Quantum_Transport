@@ -51,13 +51,15 @@ PROGRAM main
     integer(kind=4) local_NE
     integer(kind=4) first_local_energy
 
-    include "mpif.h"
-    call MPI_Init(ierr)
-    call MPI_Comm_size(MPI_COMM_WORLD, comm_size, ierr)
-    call MPI_Comm_rank(MPI_COMM_WORLD, comm_rank, ierr)
+!    include "mpif.h"
+!    call MPI_Init(ierr)
+!    call MPI_Comm_size(MPI_COMM_WORLD, comm_size, ierr)
+!    call MPI_Comm_rank(MPI_COMM_WORLD, comm_rank, ierr)
+!
+!    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
-    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
+comm_size = 1
     if (comm_rank == 0) then
         print *, 'Comm Size =', comm_size
     else
@@ -76,6 +78,8 @@ PROGRAM main
     k = 0.0d0
     nomp = 4
 
+    print *, 'read input'
+
     ! Check whether file exists.
     file_path = 'input'
     inquire (file=file_path, iostat=rc)
@@ -93,6 +97,7 @@ PROGRAM main
     local_NE = nen/comm_size
     first_local_energy = local_NE*comm_rank + 1
 
+    print *, "read ham"
     call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns, nb, nk, &
                                     k, Lx)
     print *, "solve"

@@ -545,6 +545,7 @@ contains
         end if
     end function array_inverse
 
+    !$omp declare target device_type(any)
     pure function array_trace(A) result(tr)
         implicit none
         complex(8), intent(in) :: A(:, :)
