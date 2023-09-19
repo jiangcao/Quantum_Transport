@@ -206,9 +206,11 @@ contains
         real(dp)::kx, ky, kz
         integer::nm, i, im, ik
         integer, dimension(2, nx + 1)::nmm
+        print *,"read w90"
         open (unit=10, file=trim(fname), status='unknown')
         call w90_load_from_file(10, lreorder_axis, axis)
         close (10)
+        print *,"read w90 DONE"
         nm = nb*nslab
         nband = nb
         length_x = Lx

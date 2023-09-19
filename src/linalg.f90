@@ -38,6 +38,7 @@ module linalg
 CONTAINS
 
     ! matrix inversion
+!$omp declare target device_type(any)
     subroutine invert(A, nn)
         integer :: info, nn
         integer, dimension(:), allocatable :: ipiv
@@ -59,6 +60,7 @@ CONTAINS
         deallocate (work)
         deallocate (ipiv)
     end subroutine invert
+!$omp declare target device_type(any)
 
     ! find the inverse of a banded matrix A by solving a system of linear equations
     !   on exit, A contains the banded matrix of inv(A)
