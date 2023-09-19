@@ -60,7 +60,7 @@ contains
         complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)
         z = dcmplx(En, 0.0d0)
 !
-! on the left contact
+!! on the left contact
         ii = 1
         M = size(Hii(ii)%m, 1)
         allocate (H00(M, M))
@@ -102,7 +102,7 @@ contains
         deallocate (G00, GBB, sig, H10)
 !
         allocate (A(M, M))
-! inside device l -> r
+!! inside device l -> r
         do ii = 2, nx - 1
             M = size(Hii(ii)%m, 1)
             if (size(H00, 1) .ne. M) then
@@ -120,7 +120,7 @@ contains
             call invert(A, M)
             Gl(ii)%m = A
 !
-!! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger$$
+!! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i-1)*Gln(i-1)*H(i-1,i)] * Gl(i)^\dagger$$
             call triMUL_c(H1i(ii)%m, Gln(ii - 1)%m, H1i(ii)%m, B, 'n', 'n', 'c')
             call MUL_c(sigma_lesser_ph(ii)%m, Sii(ii)%m, 'n', 'n', A)
             B = B + A
@@ -128,7 +128,7 @@ contains
             Gln(ii)%m = A
         end do
 !
-! on the right contact
+!! on the right contact
         ii = nx
         M = size(Hii(ii)%m, 1)
         allocate (H10(M, M))
@@ -192,7 +192,7 @@ contains
         deallocate (sigmar, sig, G00, GBB, H10)
         allocate (GN0(M, M))
 !
-! inside device r -> l
+!! inside device r -> l
         do ii = nx - 1, 1, -1
             M = size(Hii(ii)%m, 1)
 !! $$A = G^<(i+1) * H(i+1,i) * Gl(i)^\dagger + G(i+1) * H(i+1,i) * Gln(i)$$
@@ -233,7 +233,7 @@ contains
             G_greater(ii)%m = G_lesser(ii)%m + (G_r(ii)%m - transpose(conjg(G_r(ii)%m)))
         end do
         ii = 1
-! on the left contact
+!! on the left contact
         A = -(sigmal - transpose(conjg(sigmal)))*ferm((En - mur)/(BOLTZ*TEMPr))
         call MUL_c(A, G_greater(ii)%m, 'n', 'n', B)
         A = -(sigmal - transpose(conjg(sigmal)))*(ferm((En - mur)/(BOLTZ*TEMPr)) - 1.0d0)
