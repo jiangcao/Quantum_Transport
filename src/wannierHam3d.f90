@@ -109,13 +109,15 @@ rank=0
         do i = 1, n
             read (fid, *) ham(i, :)
         end do
-        if (present(lreorder_axis) .and. (lreorder_axis)) then
+        if (present(lreorder_axis)) then
+                if ( (lreorder_axis)) then
             allocate (aux3(n, 7))
             aux3 = ham
             aux3(:, 1:3) = ham(:, axis)
             ham = aux3
             deallocate (aux3)
         end if
+endif
         xmin = minval(ham(:, 1))
         xmax = maxval(ham(:, 1))
         ymin = minval(ham(:, 2))
@@ -204,13 +206,15 @@ rank=0
         do i = 1, nb
             read (fid, *) wannier_center(:, i)
         end do
-        if (present(lreorder_axis) .and. (lreorder_axis)) then
+        if (present(lreorder_axis) ) then
+                if ( (lreorder_axis)) then
             allocate (aux3(3, nb))
             aux3 = wannier_center
             aux3(1:3, :) = wannier_center(axis, :)
             wannier_center = aux3
             deallocate (aux3)
         end if
+endif
         ! bring wannier_center into the first unit-cell, only works for orth.
         ! to-do: make this general
         do i = 1, NB

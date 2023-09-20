@@ -26,7 +26,7 @@
 ! POSSIBILITY OF SUCH DAMAGE.
 !
 module linalg
-
+use cublas
     implicit none
 
     private

@@ -60,6 +60,10 @@ PROGRAM main
 
 
 comm_size = 1
+<<<<<<< HEAD
+comm_rank=0
+=======
+>>>>>>> c67f57f74d07182b5bf367ddb54698e5492abb80
     if (comm_rank == 0) then
         print *, 'Comm Size =', comm_size
     else
@@ -100,7 +104,7 @@ comm_size = 1
     print *, "read ham"
     call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns, nb, nk, &
                                     k, Lx)
-    print *, "solve"
+    print *, "start solve"
     call negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
                     comm_size, comm_rank, local_NE, first_local_energy, NB, &
                     NS, Lx)
@@ -109,6 +113,6 @@ comm_size = 1
     call free(H1i)
     call free(Sii)
 
-    deallocate (Hii, H1i, Sii)
+    !deallocate (Hii, H1i, Sii)
 
 END PROGRAM main

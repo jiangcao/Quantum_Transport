@@ -27,6 +27,7 @@
 module matrix_c
 !! Complex Matrix Library
 !! A 2D complex array, element to form a list/table of complex matrices
+use cublas
 
     implicit none
 
@@ -112,14 +113,14 @@ contains
     ! allocate a matrix
     pure subroutine matrix_alloc2(M, n, source)
         implicit none
-        type(type_matrix_complex), intent(out) :: M
+        type(type_matrix_complex), intent(inout) :: M
         integer, intent(in):: n(2)
         complex(8), intent(in), optional:: source(1:n(1), 1:n(2))
-        if (.not. allocated(M%m)) then
+        if (.not. allocated(M%m)) then            
             allocate (M%m(n(1), n(2)))
-        else
+        else            
             if ((M%size(1) == n(1)) .and. (M%size(2) == n(2))) then
-            else
+            else                
                 deallocate (M%m)
                 allocate (M%m(n(1), n(2)))
             end if
@@ -200,7 +201,7 @@ contains
     pure subroutine matrix_list_allocElem2(this, nx, n, source)
         implicit none
         integer, intent(in)  :: nx, n(2, 1:nx)
-        type(type_matrix_complex), intent(out) :: this(1:nx)
+        type(type_matrix_complex), intent(inout) :: this(1:nx)
         complex(8), intent(in), optional:: source(:, :, :) !! the source data to put into the matrices
         integer :: ii
         do ii = 1, nx

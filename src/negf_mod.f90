@@ -41,8 +41,9 @@ contains
     subroutine negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
                           comm_size, comm_rank, local_NE, first_local_energy, nbnd, nslab, Lx)
         use matrix_c, only: type_matrix_complex, malloc, free, sizeof
-        use rgf_mod, only: rgf_variableblock_forward
+        use cuda_rgf_mod, only: cuda_rgf_variableblock_forward
         use Output, only: write_spectrum_summed_over_k
+        use omp_lib
         type(type_matrix_complex), intent(in), dimension(nx, nk)::Hii, Sii
         type(type_matrix_complex), intent(in), dimension(nx + 1, nk)::H1i
         integer(kind=4), intent(in) :: comm_size, comm_rank, local_NE, first_local_energy
@@ -61,7 +62,7 @@ contains
         real(dp)::en(nen), dE, local_energies(local_NE)
         real(dp), dimension(:, :), allocatable::mul, mur, templ, tempr
         type(type_matrix_complex), dimension(nx, local_NE, nk)::sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater
-        type(type_matrix_complex), dimension(nx)::Jdens, Gl, Gln
+        type(type_matrix_complex), dimension(:),allocatable::Jdens, Gl, Gln
         real(dp), dimension(nen, nk)::tr, tre
         character(len=20) :: filename
         character(len=8) :: fmt
@@ -102,23 +103,35 @@ contains
         end do
         !
         iter = 0
+        !
         !$omp parallel default(shared) private(ie,ik,Jdens,Gl,Gln)
+        allocate(Jdens(nx),Gl(nx),Gln(nx))
+        !
         call malloc(Jdens, nx, nm)
         call malloc(Gl, nx, nm)
         call malloc(Gln, nx, nm)
+<<<<<<< HEAD
+        !!!$omp target teams map(to: nx, local_energies, mul, mur, TEMPl, TEMPr, Hii,H1i,Sii,sigma_lesser_ph,sigma_r_ph) map(from:G_r,G_lesser,G_greater,tr,tre) 
+=======
         !$omp target teams map(to: nx, local_energies, mul, mur, TEMPl, TEMPr, Hii,H1i,Sii,sigma_lesser_ph,sigma_r_ph) map(from:G_r,G_lesser,G_greater,tr,tre)
+>>>>>>> c67f57f74d07182b5bf367ddb54698e5492abb80
         do ie = 1, local_NE
             do ik = 1, nk
-                call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
+                call cuda_rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
                     Hii(:, ik), H1i(:, ik), Sii(:, ik), sigma_lesser_ph(:, ie, ik), &
                     sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
                     Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
             end do
         end do
+<<<<<<< HEAD
+        !!!$omp end target teams
+=======
         !$omp end target teams
+>>>>>>> c67f57f74d07182b5bf367ddb54698e5492abb80
         call free(Jdens)
         call free(Gl)
         call free(Gln)
+        deallocate(Jdens,Gl,Gln)
         !$omp end parallel
         !
         NB=nbnd
