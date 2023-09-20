@@ -14,12 +14,284 @@ IMPLICIT NONE
 
 private
 public :: cuda_rgf_variableblock_forward 
+public :: cuda_rgf_constblocksize
 
 integer,parameter::dp=8
 complex(dp),parameter:: czero=dcmplx(0.0d0,0.0d0)
 REAL(dp), PARAMETER  :: BOLTZ = 8.61734d-05 !eV K-1
 
+
+
 contains
+
+
+subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
+    sigma_r_ph, G_r, G_lesser, G_greater, Jdens, tr, tre)
+    type(type_matrix_complex), intent(in) :: Hii(nx), H1i(nx + 1), Sii(nx), sigma_lesser_ph(nx), sigma_r_ph(nx)
+    real(dp), intent(in) :: En, mul(:, :), mur(:, :), TEMPr(:, :), TEMPl(:, :)
+    integer, intent(in) :: nx,nm !! lenght of the device
+    type(type_matrix_complex), intent(inout):: G_greater(nx), G_lesser(nx), G_r(nx), Jdens(nx)
+    real(dp), intent(out) :: tr, tre     
+    ! ----    
+    COMPLEX(dp) :: H00(nm,nm),H10(nm,nm),A(nm,nm),B(nm,nm),C(nm,nm),D(nm,nm),S00(nm,nm),G00(nm,nm),GBB(nm,nm),GN0(nm,nm),Gn(nm,nm),Gp(nm,nm)
+    COMPLEX(dp) :: sig(nm,nm),sigmal(nm,nm),sigmar(nm,nm),sig2(nm,nm),glii(nm,nm),glpii(nm,nm),glnii(nm,nm),cur(nm,nm)
+    COMPLEX(dp) :: z
+    integer::i,j,k,l,info1,info2,ii
+    integer, dimension(nm) :: ipiv
+    complex(dp), dimension(nm,nm) :: work
+    real(dp)::tim
+    COMPLEX(dp), allocatable :: Gl(:,:,:),Gln(:,:,:),Glp(:,:,:) ! left-connected green function
+    complex(dp), parameter :: alpha = cmplx(1.0d0,0.0d0)
+    complex(dp), parameter :: beta  = cmplx(0.0d0,0.0d0)
+    !
+    !
+    !
+    z=dcmplx(En,0.0d-6)
+    !
+    allocate(Gl(nm,nm,nx))
+    allocate(Gln(nm,nm,nx))
+    allocate(Glp(nm,nm,nx))
+    !
+    Gln=0.0d0
+    Glp=0.0d0
+    Gl=0.0d0    
+    do l=1,nx
+        G_r(l)%m=0.0d0
+        G_lesser(l)%m=0.0d0
+        G_greater(l)%m=0.0d0
+        Jdens(l)%m=0.0d0
+    enddo    
+    ! self energy on the left contact
+    S00(:,:)=Sii(1)%m
+    call zgemm('n','n',nm,nm,nm,alpha,sigma_r_ph(1)%m,nm,S00,nm,beta,B,nm)
+    H00(:,:)=Hii(1)%m+B(:,:)
+    H10(:,:)=H1i(1)%m
+    !
+    call sancho(nm,En,S00,H00,transpose(conjg(H10)),G00,GBB)
+    !
+    call zgemm('n','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,A,nm) 
+    call zgemm('n','c',nm,nm,nm,alpha,A,nm,H10,nm,beta,sigmal,nm)  
+    call zgemm('n','n',nm,nm,nm,alpha,sigma_lesser_ph(1)%m,nm,S00,nm,beta,B,nm)
+    sig(:,:)=-(sigmal(:,:)-transpose(conjg(sigmal(:,:))))*ferm((En-mul)/(BOLTZ*TEMPl))+B(:,:)
+    A=z*S00-H00-sigmal
+    !                
+    call invert(A,nm)
+    Gl(:,:,1)=A(:,:)
+    !
+    call zgemm('n','n',nm,nm,nm,alpha,A,nm,sig,nm,beta,B,nm) 
+    call zgemm('n','c',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm) 
+    Gln(:,:,1)=C(:,:)
+    Do l=2,nx-1
+        
+        H00(:,:)=Hii(l)%m+sigma_r_ph(l)%m
+        H10(:,:)=H1i(l)%m
+        G00(:,:)=Gl(:,:,l-1)
+        sig=Gln(:,:,l-1)
+        sig2=sigma_lesser_ph(l)%m
+        S00(:,:)=Sii(l)%m
+        !
+        work=dcmplx(0.0d0,0.0d0)
+        forall (ii=1:nm) work(ii,ii)=1.0d0
+        
+        !$omp target enter data map(to:H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv)  
+        !$omp target data use_device_ptr(H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv)
+        call zgemm('n','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,B,nm) 
+        call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)
+        call zcopy(nm*nm,C,1,A,1)
+        call zaxpy(nm*nm,alpha,H00,1,A,1)
+        call zaxpy(nm*nm,-z,S00,1,A,1)
+        call zscal(nm*nm,-alpha,A,1)
+        ! A=z*S00-H00-C           
+        !
+        call zgetrf(nm, nm, A, nm, ipiv, info1)
+        call zgetrs('n',nm, nm, A, nm, ipiv, work, nm, info2)
+        call zcopy(nm*nm,work,1,A,1)
+        ! call invert(A,nm)        
+        call zcopy(nm*nm,A,1,G00,1)                
+        !      
+        call zgemm('n','n',nm,nm,nm,alpha,H10,nm,sig,nm,beta,B,nm) 
+        call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)     
+        call zgemm('n','n',nm,nm,nm,alpha,sig2,nm,S00,nm,beta,B,nm)
+        !
+        ! C(:,:)=C(:,:)+B(:,:)
+        call zaxpy(nm*nm,alpha,B,1,C,1)
+        !        
+        call zgemm('n','n',nm,nm,nm,alpha,A,nm,C,nm,beta,B,nm) 
+        call zgemm('n','c',nm,nm,nm,alpha,B,nm,A,nm,beta,Gn,nm)
+        !$omp end target data 
+        !$omp target update from(Gn,G00)     
+        !$omp target exit data map(delete:H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv)
+        Gln(:,:,l)=Gn(:,:)
+        Gl(:,:,l)=G00(:,:)
+        if (info1 .ne. 0) then
+            print *, 'SEVERE warning: zgetrf failed, info=', info1           
+            call abort()
+        end if
+        if (info2 .ne. 0) then
+            print *, 'SEVERE warning: zgetri failed, info=', info2   
+            call abort()         
+        end if
+    enddo
+    ! self energy on the right contact
+    S00(:,:)=Sii(nx)%m
+    call zgemm('n','n',nm,nm,nm,alpha,sigma_r_ph(nx)%m,nm,S00,nm,beta,B,nm)
+    H00(:,:)=Hii(nx)%m+B(:,:)
+    H10(:,:)=H1i(nx)%m
+    !
+    call sancho(NM,En,S00,H00,H10,G00,GBB)
+    !
+    call zgemm('c','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,A,nm) 
+    call zgemm('n','n',nm,nm,nm,alpha,A,nm,H10,nm,beta,sigmar,nm)  
+    H10(:,:)=H1i(nx)%m
+    call zgemm('n','n',nm,nm,nm,alpha,H10,nm,Gl(:,:,nx-1),nm,beta,B,nm) 
+    call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)
+    G00=z*S00-H00-sigmar-C   
+    !
+    call invert(G00,nm)
+    !
+    G_r(nx)%m=G00(:,:)!dcmplx(0.0d0,1.0d0)*(G00(:,:)-transpose(conjg(G00(:,:))))
+    sig=Gln(:,:,nx-1)
+    call zgemm('n','n',nm,nm,nm,alpha,H10,nm,sig,nm,beta,B,nm) 
+    call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)  ! C=H10 Gl< H01
+    call zgemm('n','n',nm,nm,nm,alpha,sigma_lesser_ph(nx)%m,nm,S00,nm,beta,B,nm)
+    ! B=Sig< S00
+    sig(:,:)=-(sigmar(:,:)-transpose(conjg(sigmar(:,:))))*ferm((En-mur)/(BOLTZ*TEMPl))+C(:,:)+B(:,:)
+    call zgemm('n','n',nm,nm,nm,alpha,G00,nm,sig,nm,beta,B,nm) 
+    call zgemm('n','c',nm,nm,nm,alpha,B,nm,G00,nm,beta,Gn,nm) 
+    ! G<00 = G00 sig< G00'
+    G_lesser(nx)%m=Gn(:,:)    
+    Gp(:,:)=Gn(:,:)+(G00(:,:)-transpose(conjg(G00(:,:))))
+    G_greater(nx)%m=Gp(:,:)
+    A=-(sigmar-transpose(conjg(sigmar)))*ferm((En-mur)/(BOLTZ*TEMPl))
+    call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gp,nm,beta,B,nm)
+    A=-(sigmar-transpose(conjg(sigmar)))*(ferm((En-mur)/(BOLTZ*TEMPl))-1.0d0)
+    call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gn,nm,beta,C,nm)
+    tim=0.0d0
+    do i=1,nm
+        do j=i,i!1,nm
+            tim=tim-dble(B(i,j)-C(i,j))
+        enddo
+    enddo
+    tr=tim
+    ! transmission
+    !-------------------------
+    do l=nx-1,1,-1
+        H10(:,:)=H1i(l)%m
+        A=Gn
+        Glii=Gl(:,:,l)
+        Glpii=Glp(:,:,l)
+        Glnii=Gln(:,:,l)
+        !
+        !$omp target enter data map(to:H10,G00,B,C,A,D,H00,S00,Glii,Glpii,Glnii,cur,Gn,Gp,GN0)  
+        !$omp target data use_device_ptr(H10,G00,B,C,A,D,H00,S00,Glii,Glpii,Glnii,cur,Gn,Gp,GN0)
+        !
+        call zgemm('n','c',nm,nm,nm,alpha,H10,nm,Glii,nm,beta,B,nm) 
+        call zgemm('n','n',nm,nm,nm,alpha,A,nm,B,nm,beta,C,nm) 
+        call zcopy(nm*nm,Glnii,1,A,1)
+        ! A=Gln(:,:,l)          
+        call zgemm('n','n',nm,nm,nm,alpha,H10,nm,A,nm,beta,B,nm) 
+        call zgemm('n','n',nm,nm,nm,alpha,G00,nm,B,nm,beta,A,nm)
+        call zcopy(nm*nm,C,1,B,1)
+        call zaxpy(nm*nm,alpha,A,1,B,1) 
+        ! B=C+A
+        call zgemm('c','n',nm,nm,nm,alpha,H10,nm,B,nm,beta,A,nm)      !!! G<_i+1,i  
+        call zcopy(nm*nm,A,1,cur,1)                
+        ! cur=dble(A(:,:)) 
+        !-------------------------
+        call zcopy(nm*nm,Gn,1,A,1)
+        ! A=Gn
+        call zgemm('n','c',nm,nm,nm,alpha,Glii,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','n',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm)   ! g H10 G<
+        call zcopy(nm*nm,Glnii,1,A,1)
+        ! A=Glnii
+        call zgemm('n','c',nm,nm,nm,alpha,A,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','c',nm,nm,nm,alpha,B,nm,G00,nm,beta,A,nm) ! g< H10 G'
+        call zcopy(nm*nm,C,1,B,1)
+        call zaxpy(nm*nm,alpha,A,1,B,1) 
+        ! B=C+A        
+        call zgemm('n','n',nm,nm,nm,alpha,H10,nm,B,nm,beta,A,nm)      !!! G<_i,i+1
+        call zaxpy(nm*nm,-alpha,A,1,cur,1) 
+        ! cur=cur-dble(A(:,:))        
+        !-------------------------        
+        call zcopy(nm*nm,Glii,1,D,1)
+        ! D(:,:)= Glii
+        call zgemm('n','c',nm,nm,nm,alpha,Glii,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','n',nm,nm,nm,alpha,B,nm,G00,nm,beta,GN0,nm)      !!! G_i,i+1
+        call zgemm('n','n',nm,nm,nm,alpha,GN0,nm,H10,nm,beta,A,nm)
+        call zgemm('n','n',nm,nm,nm,alpha,A,nm,Glii,nm,beta,C,nm)     
+        call zcopy(nm*nm,Glii,1,G00,1)
+        call zaxpy(nm*nm,alpha,C,1,G00,1) 
+        ! G00(:,:)=Glii+C(:,:)                                       !!! G_i,i        
+        !-------------------------
+        ! A(:,:)=Gn(:,:)     
+        call zcopy(nm*nm,Gn,1,A,1)
+        call zgemm('n','c',nm,nm,nm,alpha,Glii,nm,H10,nm,beta,B,nm)  
+        call zgemm('n','n',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm)     
+        call zgemm('n','n',nm,nm,nm,alpha,C,nm,H10,nm,beta,A,nm)
+        call zgemm('n','c',nm,nm,nm,alpha,A,nm,Glii,nm,beta,C,nm)
+        call zcopy(nm*nm,Glnii,1,Gn,1)
+        call zaxpy(nm*nm,alpha,C,1,Gn,1) 
+        ! Gn(:,:)= Glnii + C(:,:)
+        call zcopy(nm*nm,Glnii,1,A,1)
+        ! A(:,:)=Glnii
+        call zgemm('n','n',nm,nm,nm,alpha,GN0,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','n',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm) 
+        call zaxpy(nm*nm,alpha,C,1,Gn,1) 
+        ! Gn(:,:)= Gn(:,:)+C(:,:)!                     			 
+        call zgemm('n','c',nm,nm,nm,alpha,A,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','c',nm,nm,nm,alpha,B,nm,GN0,nm,beta,C,nm)        
+        call zaxpy(nm*nm,alpha,C,1,Gn,1)  
+        ! Gn(:,:)= Gn(:,:)+C(:,:)!     					 !!! G<_i,i
+        !-------------------------
+        ! A(:,:)=Gp(:,:)
+        call zcopy(nm*nm,Gp,1,A,1)
+        call zgemm('n','c',nm,nm,nm,alpha,Glii,nm,H10,nm,beta,B,nm)  
+        call zgemm('n','n',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm)     
+        !
+        call zgemm('n','n',nm,nm,nm,alpha,C,nm,H10,nm,beta,A,nm)
+        call zgemm('n','c',nm,nm,nm,alpha,A,nm,Glii,nm,beta,C,nm)
+        !
+        call zcopy(nm*nm,Glpii,1,Gp,1)
+        call zaxpy(nm*nm,alpha,C,1,Gp,1)
+        ! Gp(:,:)= Glpii + C(:,:)
+        ! A(:,:)=Glp(:,:,l)
+        call zcopy(nm*nm,Glpii,1,A,1)
+        call zgemm('n','n',nm,nm,nm,alpha,GN0,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','n',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm)     
+        !
+        call zaxpy(nm*nm,alpha,C,1,Gp,1)
+        ! Gp(:,:)= Gp(:,:)+C(:,:)!                     			 
+        call zgemm('n','c',nm,nm,nm,alpha,A,nm,H10,nm,beta,B,nm) 
+        call zgemm('n','c',nm,nm,nm,alpha,B,nm,GN0,nm,beta,C,nm)   
+        call zaxpy(nm*nm,alpha,C,1,Gp,1)  
+        ! Gp(:,:)= Gp(:,:)+C(:,:)!     					 !!! G>_i,i
+        !-------------------------    
+        !$omp end target data 
+        !$omp target update from(Gn,Gp,G00,cur)     
+        !$omp target exit data map(delete:H10,G00,B,C,A,D,H00,S00,Glii,Glpii,Glnii,cur,Gn,Gp,GN0)        
+        G_lesser(l)%m=Gn(:,:)
+        G_greater(l)%m=Gp(:,:)
+        G_r(l)%m=G00(:,:)
+        Jdens(l)%m=cur
+    enddo
+    !
+    Gp(:,:)=Gn(:,:)+(G00(:,:)-transpose(conjg(G00(:,:))))
+    A=-(sigmal-transpose(conjg(sigmal)))*ferm((En-mul)/(BOLTZ*TEMPr))
+    call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gp,nm,beta,B,nm)
+    A=-(sigmal-transpose(conjg(sigmal)))*(ferm((En-mul)/(BOLTZ*TEMPr))-1.0d0)
+    call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gn,nm,beta,C,nm)
+    tim=0.0d0
+    do i=1,nm
+        tim=tim+dble(B(i,i)-C(i,i))
+    enddo
+    tre=tim
+    deallocate(Gl)
+    deallocate(Gln)
+    deallocate(Glp)
+end subroutine cuda_rgf_constblocksize
+
+
+
 
 !!  Recursive Forward Green's solver
     subroutine cuda_rgf_variableblock_forward(nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
@@ -228,22 +500,32 @@ contains
 
 
     subroutine invert(A, nn)
-        integer :: info, nn
+        integer :: info1, info2, nn, i
         integer, dimension(:), allocatable :: ipiv
         complex(8), dimension(nn, nn), intent(inout) :: A
-        complex(8), dimension(:), allocatable :: work
-        allocate (work(nn*nn))
+        complex(8), dimension(:,:), allocatable :: work
+        allocate (work(nn,nn))
         allocate (ipiv(nn))
-        call zgetrf(nn, nn, A, nn, ipiv, info)
-        if (info .ne. 0) then
-            print *, 'SEVERE warning: zgetrf failed, info=', info
+        work=dcmplx(0.0d0,0.0d0)
+        forall (i=1:nn) work(i,i)=1.0d0
+        !$omp target enter data map(to:A,work,ipiv)  
+        !$omp target data use_device_ptr(A,work,ipiv)
+        call zgetrf(nn, nn, A, nn, ipiv, info1)
+        
+        !!! call zgetrs(nn, A, nn, ipiv, work, nn*nn, info2)
+        call zgetrs('n',nn, nn, A, nn, ipiv, work, nn, info2)
+        call zcopy(nn*nn,work,1,A,1)
+        
+        !$omp end target data 
+        !$omp target update from(A,work,ipiv)     
+        !$omp target exit data map(delete:A,work,ipiv)
+        if (info1 .ne. 0) then
+            print *, 'SEVERE warning: zgetrf failed, info=', info1
             A = czero
-        else
-            call zgetri(nn, A, nn, ipiv, work, nn*nn, info)
-            if (info .ne. 0) then
-                print *, 'SEVERE warning: zgetri failed, info=', info
-                A = czero
-            end if
+        end if
+        if (info2 .ne. 0) then
+            print *, 'SEVERE warning: zgetri failed, info=', info2
+            A = czero
         end if
         deallocate (work)
         deallocate (ipiv)
@@ -338,7 +620,7 @@ contains
                 END DO
             END DO
             !write(90,*)E,i,error
-            tmp = H_SS
+            ! tmp = H_SS
             ! call zcopy(nm*nm,H_SS,1,tmp,1)
 
             IF (abs(error) < TOL) THEN
@@ -454,7 +736,12 @@ contains
             Allocate (R(m, n))
         end if
         R = dcmplx(0.0d0, 0.0d0)
+        !$omp target enter data map(to:A,B,R)  
+        !$omp target data use_device_ptr(A,B,R)
         call zgemm(trA, trB, m, n, k, dcmplx(1.0d0, 0.0d0), A, lda, B, ldb, dcmplx(0.0d0, 0.0d0), R, m)
+        !$omp end target data 
+        !$omp target update from(A,B,R)     
+        !$omp target exit data map(delete:A,B,R)
     end subroutine MUL_C
 
 !!  Fermi distribution function
