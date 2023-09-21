@@ -29,7 +29,7 @@
 !
 module rgf_mod
     !! Recursive  Green's  function  solvers module
-
+use omp_lib
     implicit none
 
     private
@@ -55,13 +55,12 @@ contains
 !---- local variables
         integer    :: M, ii, jj
         complex(dp) :: z
-        real(dp)    :: tim
+        real(dp)    :: tim, start, finish, start_0
         complex(dp), allocatable :: sig(:, :), H00(:, :), H10(:, :)
         complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)
-!$omp declare target device_type(any)
+!                
         z = dcmplx(En, 0.0d0)
-!
-!! on the left contact
+! on the left contact
         ii = 1
         M = size(Hii(ii)%m, 1)
         allocate (H00(M, M))
@@ -70,7 +69,10 @@ contains
         allocate (GBB(M, M))
         allocate (sigmal(M, M))
         allocate (sig(M, M))
-!
+        !
+        start = omp_get_wtime()
+        start_0=start
+        !
 !! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$
         call MUL_c(sigma_r_ph(ii)%m, Sii(ii)%m, 'n', 'n', B)
 !
@@ -102,8 +104,12 @@ contains
         Gln(ii)%m = B
         deallocate (G00, GBB, sig, H10)
 !
+        finish = omp_get_wtime()
+        print *, "--- left contact took seconds", finish - start
+        start = finish
+        !
         allocate (A(M, M))
-!! inside device l -> r
+! inside device l -> r
         do ii = 2, nx - 1
             M = size(Hii(ii)%m, 1)
             if (size(H00, 1) .ne. M) then
@@ -121,15 +127,19 @@ contains
             call invert(A, M)
             Gl(ii)%m = A
 !
-!! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i-1)*Gln(i-1)*H(i-1,i)] * Gl(i)^\dagger$$
+!! $$Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger$$
             call triMUL_c(H1i(ii)%m, Gln(ii - 1)%m, H1i(ii)%m, B, 'n', 'n', 'c')
             call MUL_c(sigma_lesser_ph(ii)%m, Sii(ii)%m, 'n', 'n', A)
             B = B + A
             call triMUL_c(Gl(ii)%m, B, Gl(ii)%m, A, 'n', 'n', 'c')
             Gln(ii)%m = A
         end do
-!
-!! on the right contact
+        !
+        finish = omp_get_wtime()
+        print *, "--- first pass took seconds", finish - start
+        start = finish
+        !
+! on the right contact
         ii = nx
         M = size(Hii(ii)%m, 1)
         allocate (H10(M, M))
@@ -193,7 +203,12 @@ contains
         deallocate (sigmar, sig, G00, GBB, H10)
         allocate (GN0(M, M))
 !
-!! inside device r -> l
+        !
+        finish = omp_get_wtime()
+        print *, "--- right contact took seconds", finish - start
+        start = finish
+        !
+! inside device r -> l
         do ii = nx - 1, 1, -1
             M = size(Hii(ii)%m, 1)
 !! $$A = G^<(i+1) * H(i+1,i) * Gl(i)^\dagger + G(i+1) * H(i+1,i) * Gln(i)$$
@@ -233,8 +248,13 @@ contains
 !! $$G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]$$
             G_greater(ii)%m = G_lesser(ii)%m + (G_r(ii)%m - transpose(conjg(G_r(ii)%m)))
         end do
+        !
+        finish = omp_get_wtime()
+        print *, "--- second pass took seconds", finish - start
+        start = finish
+        !
         ii = 1
-!! on the left contact
+! on the left contact
         A = -(sigmal - transpose(conjg(sigmal)))*ferm((En - mur)/(BOLTZ*TEMPr))
         call MUL_c(A, G_greater(ii)%m, 'n', 'n', B)
         A = -(sigmal - transpose(conjg(sigmal)))*(ferm((En - mur)/(BOLTZ*TEMPr)) - 1.0d0)
@@ -245,8 +265,7 @@ contains
         end do
         tre = tim
         deallocate (B, A, C, GN0, sigmal)
-!
-    !!!$omp end declare target
+!           
     end subroutine rgf_variableblock_forward
 
 !!  Recursive Backward Green's solver
@@ -461,8 +480,8 @@ contains
 
 !!  Sancho-Rubio
     subroutine sancho(nm, E, S00, H00, H10, G00, GBB)
-        use cublas
         use linalg, only: invert
+        
         integer i, j, k, nm, nmax
         COMPLEX(dp) :: z
         real(dp) :: E, error
@@ -474,6 +493,7 @@ contains
         COMPLEX(dp), EXTERNAL :: ZLANGE
         complex(dp), parameter :: alpha = cmplx(1.0d0, 0.0d0)
         complex(dp), parameter :: beta = cmplx(0.0d0, 0.0d0)
+        character*1 :: transa, transb
         !
         Allocate (H_BB(nm, nm))
         Allocate (H_SS(nm, nm))
@@ -496,19 +516,21 @@ contains
         H_10 = H10
         H_01 = TRANSPOSE(CONJG(H_10))
         H_SS = H00
+        transa='n'
+        transb='n'
         do i = 1, nmax
             A = z*S00 - H_BB
             call invert(A, nm)
-            call Zgemm('n', 'n', nm, nm, nm, alpha, A, nm, H_10, nm, beta, B, nm)
-            call Zgemm('n', 'n', nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, A, nm, H_10, nm, beta, B, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
             H_SS = H_SS + C
             H_BB = H_BB + C
-            call Zgemm('n', 'n', nm, nm, nm, alpha, H_10, nm, B, nm, beta, C, nm)
-            call Zgemm('n', 'n', nm, nm, nm, alpha, A, nm, H_01, nm, beta, B, nm)
-            call Zgemm('n', 'n', nm, nm, nm, alpha, H_10, nm, B, nm, beta, A, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_10, nm, B, nm, beta, C, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, A, nm, H_01, nm, beta, B, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_10, nm, B, nm, beta, A, nm)
             H_10 = C
             H_BB = H_BB + A
-            call Zgemm('n', 'n', nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
             H_01 = C
             ! NORM --> inspect the diagonal of A
             error = 0.0d0
