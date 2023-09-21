@@ -2,6 +2,7 @@ module cuda_rgf_mod
 
 use cublas
 use cusolverdn
+use omp_lib
 
 IMPLICIT NONE
 
@@ -39,7 +40,7 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     integer::i,j,k,l,info1,info2,ii
     integer, dimension(nm) :: ipiv
     complex(dp), dimension(nm,nm) :: work
-    real(dp)::tim
+    real(dp)::tim, start, finish, start_0
     COMPLEX(dp), allocatable :: Gl(:,:,:),Gln(:,:,:),Glp(:,:,:) ! left-connected green function
     complex(dp), parameter :: alpha = cmplx(1.0d0,0.0d0)
     complex(dp), parameter :: beta  = cmplx(0.0d0,0.0d0)
@@ -61,6 +62,10 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         G_greater(l)%m=0.0d0
         Jdens(l)%m=0.0d0
     enddo    
+    !
+    start = omp_get_wtime()
+    start_0=start
+    !
     ! self energy on the left contact
     S00(:,:)=Sii(1)%m
     call zgemm('n','n',nm,nm,nm,alpha,sigma_r_ph(1)%m,nm,S00,nm,beta,B,nm)
@@ -81,6 +86,11 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm) 
     Gln(:,:,1)=C(:,:)
+    !
+    finish = omp_get_wtime()
+    print *, "---- left contact took seconds", finish - start
+    start = finish    
+    !
     Do l=2,nx-1
         
         H00(:,:)=Hii(l)%m+sigma_r_ph(l)%m
@@ -132,6 +142,9 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
             call abort()         
         end if
     enddo
+    finish = omp_get_wtime()
+    print *, "---- first pass took seconds", finish - start
+    start = finish
     ! self energy on the right contact
     S00(:,:)=Sii(nx)%m
     call zgemm('n','n',nm,nm,nm,alpha,sigma_r_ph(nx)%m,nm,S00,nm,beta,B,nm)
@@ -175,6 +188,9 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     tr=tim
     ! transmission
     !-------------------------
+    finish = omp_get_wtime()
+    print *, "---- right contact took seconds", finish - start
+    start = finish
     do l=nx-1,1,-1
         H10(:,:)=H1i(l)%m
         A=Gn
@@ -275,6 +291,10 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         Jdens(l)%m=cur
     enddo
     !
+    finish = omp_get_wtime()
+    print *, "---- second pass took seconds", finish - start
+    start = finish
+    !
     Gp(:,:)=Gn(:,:)+(G00(:,:)-transpose(conjg(G00(:,:))))
     A=-(sigmal-transpose(conjg(sigmal)))*ferm((En-mul)/(BOLTZ*TEMPr))
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gp,nm,beta,B,nm)
@@ -288,6 +308,7 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     deallocate(Gl)
     deallocate(Gln)
     deallocate(Glp)
+    print *, "RGF took seconds", finish - start_0
 end subroutine cuda_rgf_constblocksize
 
 
@@ -539,7 +560,7 @@ end subroutine cuda_rgf_constblocksize
         REAL(dp) :: TOL = 1.0D-100  ! [eV]
         COMPLEX(dp), INTENT(IN) ::  S00(nm, nm), H00(nm, nm), H10(nm, nm)
         COMPLEX(dp), INTENT(OUT) :: G00(nm, nm), GBB(nm, nm)
-        COMPLEX(dp), ALLOCATABLE :: A(:, :), B(:, :), C(:, :), tmp(:, :)
+        COMPLEX(dp), ALLOCATABLE :: A(:, :), B(:, :), C(:, :) !, tmp(:, :)
         COMPLEX(dp), ALLOCATABLE :: H_BB(:, :), H_SS(:, :), H_01(:, :), H_10(:, :), Id(:, :)
         COMPLEX(dp), EXTERNAL :: ZLANGE
         complex(dp), parameter :: alpha = cmplx(1.0d0, 0.0d0)
@@ -556,17 +577,16 @@ end subroutine cuda_rgf_constblocksize
         Allocate (Id(nm, nm))
         Allocate (A(nm, nm))
         Allocate (B(nm, nm))
-        Allocate (C(nm, nm))
-        Allocate (tmp(nm, nm))
+        Allocate (C(nm, nm))        
         Allocate (work(nm, nm))
         Allocate (ipiv(nm))
         nmax = 50
         z = dcmplx(E, 1.0d-5)
         Id = dcmplx(0.0d0,0.0d0)
-        tmp = 0.0d0
+        ! tmp = 0.0d0
         do i = 1, nm
             Id(i, i) = 1.0d0
-            tmp(i, i) = dcmplx(0.0d0, 1.0d0)
+            ! tmp(i, i) = dcmplx(0.0d0, 1.0d0)
         end do
         H_BB = H00
         H_10 = H10
@@ -574,9 +594,9 @@ end subroutine cuda_rgf_constblocksize
         H_SS = H00
         transa='N'
         transb='N'
-        
-        do i = 1, nmax            
-            !$omp target enter data map(to:C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id)  
+        ! print *, 'start sancho'
+        !$omp target enter data map(to:C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id,GBB,G00)  
+        do i = 1, nmax                        
             !$omp target data use_device_ptr(C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id)
             ! A = z*S00 - H_BB            
             call zscal(nm*nm,beta,A,1)
@@ -609,9 +629,8 @@ end subroutine cuda_rgf_constblocksize
             call zcopy(nm*nm,C,1,H_01,1)
 
             !$omp end target data 
-            !$omp target update from(C,H_10,H_01,H_SS,H_BB)     
-            !$omp target exit data map(delete:C,A,H_10,H_01,B,H_SS,H_BB,S00,work,ipiv,Id)
-
+            !$omp target update from(C)     
+            
             ! NORM --> inspect the diagonal of A                                    
             error=0.0d0
             DO k = 1, nm
@@ -624,23 +643,40 @@ end subroutine cuda_rgf_constblocksize
             ! call zcopy(nm*nm,H_SS,1,tmp,1)
 
             IF (abs(error) < TOL) THEN
-                !write(90,*) 'SR: Exited, abs(error)=',i,abs(error)
+                write(90,*) 'SR: Exited, abs(error)=',i,abs(error)
                 EXIT            
             END IF
             IF (i .EQ. nmax) THEN
                 write (*, *) 'SEVERE warning: nmax reached in sancho!!!', error
             END IF
         end do
-
-        G00 = z*S00 - H_SS
-        
-        call invert(G00, nm)
         !
-        GBB = z*S00 - H_BB
-        
-        call invert(GBB, nm)
+        !$omp target data use_device_ptr(C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id,G00,GBB)
+        ! G00 = z*S00 - H_SS        
+        call zcopy(nm*nm,H_SS,1,G00,1)
+        call zscal(nm*nm,-alpha,G00,1)
+        call zaxpy(nm*nm,z,S00,1,G00,1) 
+                
+        ! call invert(G00, nm)
+        call zgetrf(nm, nm, G00, nm, ipiv, info)
+        call zcopy(nm*nm,Id,1,work,1)
+        call zgetrs(transa,nm, nm, G00, nm, ipiv, work, nm, info)
+        call zcopy(nm*nm,work,1,G00,1)
         !
-        Deallocate (tmp)
+        ! GBB = z*S00 - H_BB             
+        call zcopy(nm*nm,H_BB,1,GBB,1)
+        call zscal(nm*nm,-alpha,GBB,1)
+        call zaxpy(nm*nm,z,S00,1,GBB,1)                
+        
+        ! call invert(GBB, nm)
+        call zgetrf(nm, nm, GBB, nm, ipiv, info)
+        call zcopy(nm*nm,Id,1,work,1)
+        call zgetrs(transa,nm, nm, GBB, nm, ipiv, work, nm, info)
+        call zcopy(nm*nm,work,1,GBB,1)
+        !$omp end target data 
+        !$omp target update from(GBB,G00)
+        !$omp target exit data map(delete:C,A,H_10,H_01,B,H_SS,H_BB,S00,work,ipiv,Id,G00,GBB)
+        !        
         Deallocate (A)
         Deallocate (B)
         Deallocate (C)
