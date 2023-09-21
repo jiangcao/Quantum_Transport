@@ -74,17 +74,28 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     !
     call sancho(nm,En,S00,H00,transpose(conjg(H10)),G00,GBB)
     !
+    sig2=sigma_lesser_ph(1)%m
+    !$omp target enter data map(to:H10,G00,A,sigmal,S00,sig2,B)  
+    !$omp target data use_device_ptr(H10,G00,A,sigmal,S00,sig2,B)
     call zgemm('n','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,A,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,A,nm,H10,nm,beta,sigmal,nm)  
-    call zgemm('n','n',nm,nm,nm,alpha,sigma_lesser_ph(1)%m,nm,S00,nm,beta,B,nm)
+    call zgemm('n','n',nm,nm,nm,alpha,sig2,nm,S00,nm,beta,B,nm)
+    !$omp end target data 
+    !$omp target update from(B,sigmal)     
+    !$omp target exit data map(delete:H10,G00,A,sigmal,S00,sig2,B)
     sig(:,:)=-(sigmal(:,:)-transpose(conjg(sigmal(:,:))))*ferm((En-mul)/(BOLTZ*TEMPl))+B(:,:)
     A=z*S00-H00-sigmal
     !                
     call invert(A,nm)
     Gl(:,:,1)=A(:,:)
     !
+    !$omp target enter data map(to:A,sig,B,C)  
+    !$omp target data use_device_ptr(A,sig,B,C)
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm) 
+    !$omp end target data 
+    !$omp target update from(C)     
+    !$omp target exit data map(delete:A,sig,B,C)
     Gln(:,:,1)=C(:,:)
     !
     finish = omp_get_wtime()
@@ -153,24 +164,41 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     !
     call sancho(NM,En,S00,H00,H10,G00,GBB)
     !
+    Glii=Gl(:,:,nx-1)
+    !$omp target enter data map(to:H10,G00,A,sigmar,G00,B,C,Glii)  
+    !$omp target data use_device_ptr(H10,G00,A,sigmar,G00,B,C,Glii)
     call zgemm('c','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,A,nm) 
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,H10,nm,beta,sigmar,nm)  
-    H10(:,:)=H1i(nx)%m
-    call zgemm('n','n',nm,nm,nm,alpha,H10,nm,Gl(:,:,nx-1),nm,beta,B,nm) 
+    !
+    call zgemm('n','n',nm,nm,nm,alpha,H10,nm,Glii,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)
+    !$omp end target data 
+    !$omp target update from(C,sigmar)     
+    !$omp target exit data map(delete:H10,G00,A,sigmar,G00,B,C,Glii)
     G00=z*S00-H00-sigmar-C   
     !
     call invert(G00,nm)
     !
     G_r(nx)%m=G00(:,:)!dcmplx(0.0d0,1.0d0)*(G00(:,:)-transpose(conjg(G00(:,:))))
     sig=Gln(:,:,nx-1)
+    sig2=sigma_lesser_ph(nx)%m
+    !$omp target enter data map(to:H10,sig,B,C,sig2,S00)  
+    !$omp target data use_device_ptr(H10,sig,B,C,sig2,S00)
     call zgemm('n','n',nm,nm,nm,alpha,H10,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)  ! C=H10 Gl< H01
-    call zgemm('n','n',nm,nm,nm,alpha,sigma_lesser_ph(nx)%m,nm,S00,nm,beta,B,nm)
+    call zgemm('n','n',nm,nm,nm,alpha,sig2,nm,S00,nm,beta,B,nm)
+    !$omp end target data 
+    !$omp target update from(B)     
+    !$omp target exit data map(delete:H10,sig,B,C,sig2,S00)
     ! B=Sig< S00
     sig(:,:)=-(sigmar(:,:)-transpose(conjg(sigmar(:,:))))*ferm((En-mur)/(BOLTZ*TEMPl))+C(:,:)+B(:,:)
+    !$omp target enter data map(to:G00,sig,Gn,B)  
+    !$omp target data use_device_ptr(G00,sig,Gn,B)
     call zgemm('n','n',nm,nm,nm,alpha,G00,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,G00,nm,beta,Gn,nm) 
+    !$omp end target data 
+    !$omp target update from(Gn)     
+    !$omp target exit data map(delete:G00,sig,Gn,B)
     ! G<00 = G00 sig< G00'
     G_lesser(nx)%m=Gn(:,:)    
     Gp(:,:)=Gn(:,:)+(G00(:,:)-transpose(conjg(G00(:,:))))
