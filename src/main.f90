@@ -27,6 +27,7 @@
 !
 PROGRAM main
 
+    use omp_lib
     use negf_mod, only: negf_solve
     use matrix_c, only: type_matrix_complex, free
     use deviceHam_mod, only: devH_build_fromWannierFile
@@ -41,6 +42,8 @@ PROGRAM main
     character(len=10)::file_path
     integer::rc, fu
     integer::nomp ! openmp process number
+
+    real(8) :: start, finish
 
     namelist /input/ nx, ns, temp, mu, nk, nomp, nen, emin, emax
 
@@ -60,10 +63,7 @@ PROGRAM main
 
 
 comm_size = 1
-<<<<<<< HEAD
 comm_rank=0
-=======
->>>>>>> c67f57f74d07182b5bf367ddb54698e5492abb80
     if (comm_rank == 0) then
         print *, 'Comm Size =', comm_size
     else
@@ -104,15 +104,20 @@ comm_rank=0
     print *, "read ham"
     call devH_build_fromWannierFile('ham_dat', Hii, H1i, Sii, nx, ns, nb, nk, &
                                     k, Lx)
-    print *, "start solve"
+    print *, "start NEGF solver ... "
+    start = omp_get_wtime()
+
     call negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
                     comm_size, comm_rank, local_NE, first_local_energy, NB, &
                     NS, Lx)
+
+    finish = omp_get_wtime()
+    print *, "Total Work took seconds", finish - start
 
     call free(Hii)
     call free(H1i)
     call free(Sii)
 
     !deallocate (Hii, H1i, Sii)
-
+    
 END PROGRAM main
