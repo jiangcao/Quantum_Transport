@@ -15,16 +15,40 @@ IMPLICIT NONE
 
 private
 public :: cuda_rgf_variableblock_forward 
-public :: cuda_rgf_constblocksize
+public :: cuda_rgf_constblocksize, cuda_rgf_init, cuda_rgf_finish
 
 integer,parameter::dp=8
 complex(dp),parameter:: czero=dcmplx(0.0d0,0.0d0)
 REAL(dp), PARAMETER  :: BOLTZ = 8.61734d-05 !eV K-1
 
-
+COMPLEX(dp),allocatable :: H00(:,:),H10(:,:),A(:,:),B(:,:),C(:,:),D(:,:),S00(:,:),G00(:,:),GBB(:,:),GN0(:,:),Gn(:,:),Gp(:,:)
+COMPLEX(dp),allocatable :: sig(:,:),sigmal(:,:),sigmar(:,:),sig2(:,:),glii(:,:),glpii(:,:),glnii(:,:),cur(:,:)
+COMPLEX(dp), ALLOCATABLE :: H_BB(:, :), H_SS(:, :), H_01(:, :), H_10(:, :), Id(:, :)
+complex(dp), dimension(:,:), allocatable :: work   
+integer, dimension(:), allocatable :: ipiv    
 
 contains
 
+subroutine cuda_rgf_init(nm)
+    integer,intent(in)::nm
+    Allocate (H_BB(nm, nm))
+    Allocate (H_SS(nm, nm))
+    Allocate (H_01(nm, nm))
+    Allocate (H_10(nm, nm))
+    Allocate (Id(nm, nm))     
+    Allocate (work(nm, nm))
+    Allocate (ipiv(nm))
+    Allocate (H00(nm,nm),H10(nm,nm),A(nm,nm),B(nm,nm),C(nm,nm),D(nm,nm),S00(nm,nm),G00(nm,nm),GBB(nm,nm),GN0(nm,nm),Gn(nm,nm),Gp(nm,nm))
+    Allocate (sig(nm,nm),sigmal(nm,nm),sigmar(nm,nm),sig2(nm,nm),glii(nm,nm),glpii(nm,nm),glnii(nm,nm),cur(nm,nm))
+    !$omp target enter data map(to:H00,H10,G00,A,sigmal,S00,sig,sig2,B,C,D,Gn,Gp,ipiv,work,sigmar,glii,glnii,glpii,cur,GN0,H_BB,H_SS,H_01,H_10,Id,GBB)    
+end subroutine cuda_rgf_init
+
+
+subroutine cuda_rgf_finish()    
+    !$omp target exit data map(delete:H00,H10,G00,A,sigmal,S00,sig,sig2,B,C,D,Gn,Gp,ipiv,work,sigmar,glii,glnii,glpii,cur,GN0,H_BB,H_SS,H_01,H_10,Id,GBB)
+    deallocate (H_BB,H_SS,H_01,H_10,Id,work,ipiv)
+    deallocate (H00,H10,A,B,C,D,S00,G00,GBB,GN0,Gn,Gp,sig,sigmal,sigmar,sig2,glii,glpii,glnii,cur)    
+end subroutine cuda_rgf_finish
 
 subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, &
     sigma_r_ph, G_r, G_lesser, G_greater, Jdens, tr, tre)
@@ -33,25 +57,22 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     integer, intent(in) :: nx,nm !! lenght of the device
     type(type_matrix_complex), intent(inout):: G_greater(nx), G_lesser(nx), G_r(nx), Jdens(nx)
     real(dp), intent(out) :: tr, tre     
-    ! ----    
-    COMPLEX(dp) :: H00(nm,nm),H10(nm,nm),A(nm,nm),B(nm,nm),C(nm,nm),D(nm,nm),S00(nm,nm),G00(nm,nm),GBB(nm,nm),GN0(nm,nm),Gn(nm,nm),Gp(nm,nm)
-    COMPLEX(dp) :: sig(nm,nm),sigmal(nm,nm),sigmar(nm,nm),sig2(nm,nm),glii(nm,nm),glpii(nm,nm),glnii(nm,nm),cur(nm,nm)
+    ! ----        
     COMPLEX(dp) :: z
     integer::i,j,k,l,info1,info2,ii
-    integer, dimension(nm) :: ipiv
-    complex(dp), dimension(nm,nm) :: work
     real(dp)::tim, start, finish, start_0
     COMPLEX(dp), allocatable :: Gl(:,:,:),Gln(:,:,:),Glp(:,:,:) ! left-connected green function
     complex(dp), parameter :: alpha = cmplx(1.0d0,0.0d0)
     complex(dp), parameter :: beta  = cmplx(0.0d0,0.0d0)
     !
-    !
-    !
     z=dcmplx(En,0.0d-6)
+    Id=dcmplx(0.0d0,0.0d0)
+    forall (ii=1:nm) Id(ii,ii)=1.0d0
     !
     allocate(Gl(nm,nm,nx))
     allocate(Gln(nm,nm,nx))
     allocate(Glp(nm,nm,nx))
+    !    
     !
     Gln=0.0d0
     Glp=0.0d0
@@ -61,41 +82,55 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         G_lesser(l)%m=0.0d0
         G_greater(l)%m=0.0d0
         Jdens(l)%m=0.0d0
-    enddo    
+    enddo        
     !
     start = omp_get_wtime()
-    start_0=start
-    !
+    start_0=start        
+    !    
     ! self energy on the left contact
     S00(:,:)=Sii(1)%m
-    call zgemm('n','n',nm,nm,nm,alpha,sigma_r_ph(1)%m,nm,S00,nm,beta,B,nm)
+    sig(:,:)=sigma_r_ph(1)%m
+    !$omp target update to(sig,S00) 
+    !$omp target data use_device_ptr(sig,S00,B)
+    call zgemm('n','n',nm,nm,nm,alpha,sig,nm,S00,nm,beta,B,nm)
+    !$omp end target data
+    !$omp target update from(B) 
     H00(:,:)=Hii(1)%m+B(:,:)
     H10(:,:)=H1i(1)%m
     !
     call sancho(nm,En,S00,H00,transpose(conjg(H10)),G00,GBB)
     !
-    sig2=sigma_lesser_ph(1)%m
-    !$omp target enter data map(to:H10,G00,A,sigmal,S00,sig2,B)  
+    sig2(:,:)=sigma_lesser_ph(1)%m
+    ! 
+    !$omp target update to(H10,G00,sigmal,S00,sig2) 
     !$omp target data use_device_ptr(H10,G00,A,sigmal,S00,sig2,B)
     call zgemm('n','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,A,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,A,nm,H10,nm,beta,sigmal,nm)  
     call zgemm('n','n',nm,nm,nm,alpha,sig2,nm,S00,nm,beta,B,nm)
     !$omp end target data 
     !$omp target update from(B,sigmal)     
-    !$omp target exit data map(delete:H10,G00,A,sigmal,S00,sig2,B)
+    !!!$omp target exit data map(delete:H10,G00,A,sigmal,S00,sig2,B)
     sig(:,:)=-(sigmal(:,:)-transpose(conjg(sigmal(:,:))))*ferm((En-mul)/(BOLTZ*TEMPl))+B(:,:)
     A=z*S00-H00-sigmal
-    !                
-    call invert(A,nm)
+    !             
+    ! call invert(A,nm)
+    
+    !$omp target update to(A, Id) 
+    !$omp target data use_device_ptr(A,ipiv,work,Id)
+    call zcopy(nm*nm,Id,1,work,1)    
+    call zgetrf(nm, nm, A, nm, ipiv, info1)    
+    call zgetrs('n',nm, nm, A, nm, ipiv, work, nm, info2)
+    call zcopy(nm*nm,work,1,A,1)    
+    !$omp end target data 
+    !$omp target update from(A)  
     Gl(:,:,1)=A(:,:)
-    !
-    !$omp target enter data map(to:A,sig,B,C)  
+    !    
+    !$omp target update to(sig,A)   
     !$omp target data use_device_ptr(A,sig,B,C)
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,A,nm,beta,C,nm) 
     !$omp end target data 
-    !$omp target update from(C)     
-    !$omp target exit data map(delete:A,sig,B,C)
+    !$omp target update from(C)         
     Gln(:,:,1)=C(:,:)
     !
     finish = omp_get_wtime()
@@ -110,12 +145,10 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         sig=Gln(:,:,l-1)
         sig2=sigma_lesser_ph(l)%m
         S00(:,:)=Sii(l)%m
-        !
-        work=dcmplx(0.0d0,0.0d0)
-        forall (ii=1:nm) work(ii,ii)=1.0d0
+        !          
+        !$omp target update to(H00,H10,G00,S00,sig,sig2) 
+        !$omp target data use_device_ptr(H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv,Id)
         
-        !$omp target enter data map(to:H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv)  
-        !$omp target data use_device_ptr(H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv)
         call zgemm('n','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,B,nm) 
         call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)
         call zcopy(nm*nm,C,1,A,1)
@@ -124,10 +157,11 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         call zscal(nm*nm,-alpha,A,1)
         ! A=z*S00-H00-C           
         !
+        ! call invert(A,nm)        
+        call zcopy(nm*nm,Id,1,work,1)    
         call zgetrf(nm, nm, A, nm, ipiv, info1)
         call zgetrs('n',nm, nm, A, nm, ipiv, work, nm, info2)
-        call zcopy(nm*nm,work,1,A,1)
-        ! call invert(A,nm)        
+        call zcopy(nm*nm,work,1,A,1)        
         call zcopy(nm*nm,A,1,G00,1)                
         !      
         call zgemm('n','n',nm,nm,nm,alpha,H10,nm,sig,nm,beta,B,nm) 
@@ -140,8 +174,7 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         call zgemm('n','n',nm,nm,nm,alpha,A,nm,C,nm,beta,B,nm) 
         call zgemm('n','c',nm,nm,nm,alpha,B,nm,A,nm,beta,Gn,nm)
         !$omp end target data 
-        !$omp target update from(Gn,G00)     
-        !$omp target exit data map(delete:H10,G00,B,C,A,H00,S00,Gn,sig,sig2,work,ipiv)
+        !$omp target update from(Gn,G00)             
         Gln(:,:,l)=Gn(:,:)
         Gl(:,:,l)=G00(:,:)
         if (info1 .ne. 0) then
@@ -158,14 +191,20 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     start = finish
     ! self energy on the right contact
     S00(:,:)=Sii(nx)%m
-    call zgemm('n','n',nm,nm,nm,alpha,sigma_r_ph(nx)%m,nm,S00,nm,beta,B,nm)
+    sig2(:,:)=sigma_r_ph(nx)%m
+    !$omp target update to(S00,sig2) 
+    !$omp target data use_device_ptr(S00,sig2,B)
+    call zgemm('n','n',nm,nm,nm,alpha,sig2,nm,S00,nm,beta,B,nm)
+    !$omp end target data 
+    !$omp target update to(B) 
     H00(:,:)=Hii(nx)%m+B(:,:)
     H10(:,:)=H1i(nx)%m
     !
     call sancho(NM,En,S00,H00,H10,G00,GBB)
     !
     Glii=Gl(:,:,nx-1)
-    !$omp target enter data map(to:H10,G00,A,sigmar,G00,B,C,Glii)  
+    
+    !$omp target update to(H10,G00,Glii)       
     !$omp target data use_device_ptr(H10,G00,A,sigmar,G00,B,C,Glii)
     call zgemm('c','n',nm,nm,nm,alpha,H10,nm,G00,nm,beta,A,nm) 
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,H10,nm,beta,sigmar,nm)  
@@ -174,39 +213,61 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)
     !$omp end target data 
     !$omp target update from(C,sigmar)     
-    !$omp target exit data map(delete:H10,G00,A,sigmar,G00,B,C,Glii)
+    !
     G00=z*S00-H00-sigmar-C   
     !
-    call invert(G00,nm)
+    ! call invert(G00,nm)    
+    !$omp target update to(G00, work) 
+    !$omp target data use_device_ptr(G00,ipiv,work,Id)
+    call zcopy(nm*nm,Id,1,work,1)
+    call zgetrf(nm, nm, G00, nm, ipiv, info1)    
+    call zgetrs('n',nm, nm, G00, nm, ipiv, work, nm, info2)
+    call zcopy(nm*nm,work,1,G00,1)    
+    !$omp end target data 
+    !$omp target update from(G00)  
     !
     G_r(nx)%m=G00(:,:)!dcmplx(0.0d0,1.0d0)*(G00(:,:)-transpose(conjg(G00(:,:))))
     sig=Gln(:,:,nx-1)
     sig2=sigma_lesser_ph(nx)%m
-    !$omp target enter data map(to:H10,sig,B,C,sig2,S00)  
+    
+    !$omp target update to(sig,sig2,S00)     
     !$omp target data use_device_ptr(H10,sig,B,C,sig2,S00)
     call zgemm('n','n',nm,nm,nm,alpha,H10,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,H10,nm,beta,C,nm)  ! C=H10 Gl< H01
     call zgemm('n','n',nm,nm,nm,alpha,sig2,nm,S00,nm,beta,B,nm)
     !$omp end target data 
     !$omp target update from(B)     
-    !$omp target exit data map(delete:H10,sig,B,C,sig2,S00)
+    
     ! B=Sig< S00
     sig(:,:)=-(sigmar(:,:)-transpose(conjg(sigmar(:,:))))*ferm((En-mur)/(BOLTZ*TEMPl))+C(:,:)+B(:,:)
-    !$omp target enter data map(to:G00,sig,Gn,B)  
+    !
+    
+    !$omp target update to(G00,sig)     
     !$omp target data use_device_ptr(G00,sig,Gn,B)
     call zgemm('n','n',nm,nm,nm,alpha,G00,nm,sig,nm,beta,B,nm) 
     call zgemm('n','c',nm,nm,nm,alpha,B,nm,G00,nm,beta,Gn,nm) 
     !$omp end target data 
     !$omp target update from(Gn)     
-    !$omp target exit data map(delete:G00,sig,Gn,B)
+   
     ! G<00 = G00 sig< G00'
     G_lesser(nx)%m=Gn(:,:)    
     Gp(:,:)=Gn(:,:)+(G00(:,:)-transpose(conjg(G00(:,:))))
     G_greater(nx)%m=Gp(:,:)
     A=-(sigmar-transpose(conjg(sigmar)))*ferm((En-mur)/(BOLTZ*TEMPl))
+    !
+    !$omp target update to(A,Gp)     
+    !$omp target data use_device_ptr(A,Gp,B)
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gp,nm,beta,B,nm)
+    !$omp end target data 
+    !$omp target update from(B)     
+    !
     A=-(sigmar-transpose(conjg(sigmar)))*(ferm((En-mur)/(BOLTZ*TEMPl))-1.0d0)
+    !
+    !$omp target update to(A,Gn)     
+    !$omp target data use_device_ptr(A,Gn,C)
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gn,nm,beta,C,nm)
+    !$omp end target data 
+    !$omp target update from(C)     
     tim=0.0d0
     do i=1,nm
         do j=i,i!1,nm
@@ -225,8 +286,8 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         Glii=Gl(:,:,l)
         Glpii=Glp(:,:,l)
         Glnii=Gln(:,:,l)
-        !
-        !$omp target enter data map(to:H10,G00,B,C,A,D,H00,S00,Glii,Glpii,Glnii,cur,Gn,Gp,GN0)  
+                
+        !$omp target update to(H10,A,Glii,Glpii,Glnii)       
         !$omp target data use_device_ptr(H10,G00,B,C,A,D,H00,S00,Glii,Glpii,Glnii,cur,Gn,Gp,GN0)
         !
         call zgemm('n','c',nm,nm,nm,alpha,H10,nm,Glii,nm,beta,B,nm) 
@@ -312,7 +373,7 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
         !-------------------------    
         !$omp end target data 
         !$omp target update from(Gn,Gp,G00,cur)     
-        !$omp target exit data map(delete:H10,G00,B,C,A,D,H00,S00,Glii,Glpii,Glnii,cur,Gn,Gp,GN0)        
+               
         G_lesser(l)%m=Gn(:,:)
         G_greater(l)%m=Gp(:,:)
         G_r(l)%m=G00(:,:)
@@ -325,14 +386,26 @@ subroutine cuda_rgf_constblocksize(nm, nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i,
     !
     Gp(:,:)=Gn(:,:)+(G00(:,:)-transpose(conjg(G00(:,:))))
     A=-(sigmal-transpose(conjg(sigmal)))*ferm((En-mul)/(BOLTZ*TEMPr))
+    !
+    !$omp target update to(A,Gp)       
+    !$omp target data use_device_ptr(A,Gp,B)
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gp,nm,beta,B,nm)
+    !$omp end target data 
+    !$omp target update from(B)     
+    !
     A=-(sigmal-transpose(conjg(sigmal)))*(ferm((En-mul)/(BOLTZ*TEMPr))-1.0d0)
+    !$omp target update to(A,Gn)       
+    !$omp target data use_device_ptr(A,Gn,C)
     call zgemm('n','n',nm,nm,nm,alpha,A,nm,Gn,nm,beta,C,nm)
+    !$omp end target data 
+    !$omp target update from(C)     
+    !
     tim=0.0d0
     do i=1,nm
         tim=tim+dble(B(i,i)-C(i,i))
     enddo
     tre=tim
+    !
     deallocate(Gl)
     deallocate(Gln)
     deallocate(Glp)
@@ -581,40 +654,25 @@ end subroutine cuda_rgf_constblocksize
     end subroutine invert
 
 !!  Sancho-Rubio
-    subroutine sancho(nm, E, S00, H00, H10, G00, GBB)
+    subroutine sancho(nm, E, S_00, H00, H10, G00, GBB)
         integer i, j, k, nm, nmax, ii,jj
         COMPLEX(dp) :: z
         real(dp) :: E, error
         REAL(dp) :: TOL = 1.0D-100  ! [eV]
-        COMPLEX(dp), INTENT(IN) ::  S00(nm, nm), H00(nm, nm), H10(nm, nm)
-        COMPLEX(dp), INTENT(OUT) :: G00(nm, nm), GBB(nm, nm)
-        COMPLEX(dp), ALLOCATABLE :: A(:, :), B(:, :), C(:, :) !, tmp(:, :)
-        COMPLEX(dp), ALLOCATABLE :: H_BB(:, :), H_SS(:, :), H_01(:, :), H_10(:, :), Id(:, :)
+        COMPLEX(dp), INTENT(IN) ::  S_00(nm, nm), H00(nm, nm), H10(nm, nm)
+        COMPLEX(dp), INTENT(OUT) :: G00(nm, nm), GBB(nm, nm)        
         COMPLEX(dp), EXTERNAL :: ZLANGE
         complex(dp), parameter :: alpha = cmplx(1.0d0, 0.0d0)
         complex(dp), parameter :: beta = cmplx(0.0d0, 0.0d0)
-        character*1 :: transa, transb
-        complex(dp), dimension(:,:), allocatable :: work   
-        integer, dimension(:), allocatable :: ipiv     
+        character*1 :: transa, transb         
         integer :: info
-        !
-        Allocate (H_BB(nm, nm))
-        Allocate (H_SS(nm, nm))
-        Allocate (H_01(nm, nm))
-        Allocate (H_10(nm, nm))
-        Allocate (Id(nm, nm))
-        Allocate (A(nm, nm))
-        Allocate (B(nm, nm))
-        Allocate (C(nm, nm))        
-        Allocate (work(nm, nm))
-        Allocate (ipiv(nm))
+        !        
         nmax = 50
         z = dcmplx(E, 1.0d-5)
         Id = dcmplx(0.0d0,0.0d0)
         ! tmp = 0.0d0
         do i = 1, nm
-            Id(i, i) = 1.0d0
-            ! tmp(i, i) = dcmplx(0.0d0, 1.0d0)
+            Id(i, i) = 1.0d0           
         end do
         H_BB = H00
         H_10 = H10
@@ -622,14 +680,14 @@ end subroutine cuda_rgf_constblocksize
         H_SS = H00
         transa='N'
         transb='N'
-        ! print *, 'start sancho'
-        !$omp target enter data map(to:C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id,GBB,G00)  
+        !$omp target update to(S_00,H_BB,H_10,H_01,H_SS,Id)
+        ! print *, 'start sancho'        
         do i = 1, nmax                        
-            !$omp target data use_device_ptr(C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id)
-            ! A = z*S00 - H_BB            
+            !$omp target data use_device_ptr(C,A,H_10,H_01,B,H_SS,H_BB,S_00,ipiv,work,Id)
+            ! A = z*S_00 - H_BB            
             call zscal(nm*nm,beta,A,1)
             call zaxpy(nm*nm,-alpha,H_BB,1,A,1)
-            call zaxpy(nm*nm,z,S00,1,A,1)
+            call zaxpy(nm*nm,z,S_00,1,A,1)
 
             ! inv(A)
             call zgetrf(nm, nm, A, nm, ipiv, info)
@@ -679,11 +737,11 @@ end subroutine cuda_rgf_constblocksize
             END IF
         end do
         !
-        !$omp target data use_device_ptr(C,A,H_10,H_01,B,H_SS,H_BB,S00,ipiv,work,Id,G00,GBB)
-        ! G00 = z*S00 - H_SS        
+        !$omp target data use_device_ptr(C,A,H_10,H_01,B,H_SS,H_BB,S_00,ipiv,work,Id,G00,GBB)
+        ! G00 = z*S_00 - H_SS        
         call zcopy(nm*nm,H_SS,1,G00,1)
         call zscal(nm*nm,-alpha,G00,1)
-        call zaxpy(nm*nm,z,S00,1,G00,1) 
+        call zaxpy(nm*nm,z,S_00,1,G00,1) 
                 
         ! call invert(G00, nm)
         call zgetrf(nm, nm, G00, nm, ipiv, info)
@@ -691,10 +749,10 @@ end subroutine cuda_rgf_constblocksize
         call zgetrs(transa,nm, nm, G00, nm, ipiv, work, nm, info)
         call zcopy(nm*nm,work,1,G00,1)
         !
-        ! GBB = z*S00 - H_BB             
+        ! GBB = z*S_00 - H_BB             
         call zcopy(nm*nm,H_BB,1,GBB,1)
         call zscal(nm*nm,-alpha,GBB,1)
-        call zaxpy(nm*nm,z,S00,1,GBB,1)                
+        call zaxpy(nm*nm,z,S_00,1,GBB,1)                
         
         ! call invert(GBB, nm)
         call zgetrf(nm, nm, GBB, nm, ipiv, info)
@@ -702,19 +760,8 @@ end subroutine cuda_rgf_constblocksize
         call zgetrs(transa,nm, nm, GBB, nm, ipiv, work, nm, info)
         call zcopy(nm*nm,work,1,GBB,1)
         !$omp end target data 
-        !$omp target update from(GBB,G00)
-        !$omp target exit data map(delete:C,A,H_10,H_01,B,H_SS,H_BB,S00,work,ipiv,Id,G00,GBB)
-        !        
-        Deallocate (A)
-        Deallocate (B)
-        Deallocate (C)
-        Deallocate (H_BB)
-        Deallocate (H_SS)
-        Deallocate (H_01)
-        Deallocate (H_10)
-        Deallocate (Id)
-        Deallocate (work)
-        Deallocate (ipiv)
+        !$omp target update from(GBB,G00)        
+        !                
     end subroutine sancho
 
     subroutine triMUL_C(A, B, C, R, trA, trB, trC)
