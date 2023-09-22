@@ -41,7 +41,7 @@ contains
     subroutine negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
                           comm_size, comm_rank, local_NE, first_local_energy, nbnd, nslab, Lx)
         use matrix_c, only: type_matrix_complex, malloc, free, sizeof
-        use cuda_rgf_mod, only: cuda_rgf_variableblock_forward, cuda_rgf_constblocksize
+        use cuda_rgf_mod, only: cuda_rgf_variableblock_forward, cuda_rgf_constblocksize,cuda_rgf_init,cuda_rgf_finish
         ! use rgf_mod, only: rgf_variableblock_forward
         use Output, only: write_spectrum_summed_over_k
         use omp_lib
@@ -109,8 +109,9 @@ contains
         allocate(Jdens(nx),Gl(nx),Gln(nx))        
         call malloc(Jdens, nx, nm)
         call malloc(Gl, nx, nm)
-        call malloc(Gln, nx, nm)
-        !$omp do
+        call malloc(Gln, nx, nm)        
+        call cuda_rgf_init(nm(1,1))
+        !!$omp do        
         do ie = 1, local_NE
             do ik = 1, nk
                 !  call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
@@ -123,8 +124,9 @@ contains
                    sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
                    Jdens, tr(ie, ik), tre(ie, ik))    
             end do
-        end do
-        !$omp end do
+        end do        
+        !!$omp end do
+        call cuda_rgf_finish()
         call free(Jdens)
         call free(Gl)
         call free(Gln)
