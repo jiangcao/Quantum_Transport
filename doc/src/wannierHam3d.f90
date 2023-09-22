@@ -71,7 +71,7 @@ CONTAINS
 
     SUBROUTINE w90_load_from_file(fid, lreorder_axis, axis)
         use, intrinsic :: iso_fortran_env
-        include "mpif.h"
+!        include "mpif.h"
         integer, intent(in) :: fid
         logical, intent(in), optional :: lreorder_axis
         integer, intent(in), optional :: axis(3)
@@ -84,8 +84,8 @@ CONTAINS
         integer(kind=int32) :: rank
         integer(kind=int32) :: ierror
 ! Get the individual process (rank)
-        call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierror)
-
+!        call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierror)
+rank=0
         read (fid, *) nvb, spin_deg ! number of VBs, spin-degeneracy
         read (fid, *) comment
         read (fid, *) alpha
@@ -95,25 +95,29 @@ CONTAINS
         cell(:, 2) = beta
         cell(:, 3) = gamm
         read (fid, *) comment
-        if (present(lreorder_axis) .and. (lreorder_axis)) then
-            aux2(:, :) = cell(:, axis)
-            cell = aux2
-            alpha = cell(:, 1)
-            beta = cell(:, 2)
-            gamm = cell(:, 3)
-        end if
+        if (present(lreorder_axis)) then
+                if (lreorder_axis) then
+                        aux2(:, :) = cell(:, axis)
+                        cell = aux2
+                        alpha = cell(:, 1)
+                        beta = cell(:, 2)
+                        gamm = cell(:, 3)
+                end if
+        endif
         read (fid, *) n
         allocate (ham(n, 7))
         do i = 1, n
             read (fid, *) ham(i, :)
         end do
-        if (present(lreorder_axis) .and. (lreorder_axis)) then
+        if (present(lreorder_axis)) then
+                if ( (lreorder_axis)) then
             allocate (aux3(n, 7))
             aux3 = ham
             aux3(:, 1:3) = ham(:, axis)
             ham = aux3
             deallocate (aux3)
         end if
+endif
         xmin = minval(ham(:, 1))
         xmax = maxval(ham(:, 1))
         ymin = minval(ham(:, 2))
@@ -202,13 +206,15 @@ CONTAINS
         do i = 1, nb
             read (fid, *) wannier_center(:, i)
         end do
-        if (present(lreorder_axis) .and. (lreorder_axis)) then
+        if (present(lreorder_axis) ) then
+                if ( (lreorder_axis)) then
             allocate (aux3(3, nb))
             aux3 = wannier_center
             aux3(1:3, :) = wannier_center(axis, :)
             wannier_center = aux3
             deallocate (aux3)
         end if
+endif
         ! bring wannier_center into the first unit-cell, only works for orth.
         ! to-do: make this general
         do i = 1, NB

@@ -29,7 +29,7 @@
 !
 module rgf_mod
     !! Recursive  Green's  function  solvers module
-
+use omp_lib
     implicit none
 
     private
@@ -55,11 +55,11 @@ contains
 !---- local variables
         integer    :: M, ii, jj
         complex(dp) :: z
-        real(dp)    :: tim
+        real(dp)    :: tim, start, finish, start_0
         complex(dp), allocatable :: sig(:, :), H00(:, :), H10(:, :)
         complex(dp), allocatable :: A(:, :), B(:, :), C(:, :), G00(:, :), GBB(:, :), sigmar(:, :), sigmal(:, :), GN0(:, :)
+!                
         z = dcmplx(En, 0.0d0)
-!
 ! on the left contact
         ii = 1
         M = size(Hii(ii)%m, 1)
@@ -69,21 +69,24 @@ contains
         allocate (GBB(M, M))
         allocate (sigmal(M, M))
         allocate (sig(M, M))
-!
+        !
+        start = omp_get_wtime()
+        start_0=start
+        !
 !! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$
         call MUL_c(sigma_r_ph(ii)%m, Sii(ii)%m, 'n', 'n', B)
 !
         H00 = Hii(ii)%m + B
         H10 = H1i(ii)%m
         call sancho(M, En, Sii(ii)%m, H00, transpose(conjg(H10)), G00, GBB)
-!$omp critical
-        open (unit=10, file='sancho_g00.dat', position='append')
-        write (10, *) En, 2, -aimag(trace(G00))
-        close (10)
-        open (unit=10, file='sancho_gbb.dat', position='append')
-        write (10, *) En, 2, -aimag(trace(Gbb))
-        close (10)
-!$omp end critical
+!!!$omp critical
+!!        open (unit=10, file='sancho_g00.dat', position='append')
+!!        write (10, *) En, 2, -aimag(trace(G00))
+!!        close (10)
+!!        open (unit=10, file='sancho_gbb.dat', position='append')
+!!        write (10, *) En, 2, -aimag(trace(Gbb))
+!!        close (10)
+!!!$omp end critical
 !
 !! $$\Sigma^R = H(i,i+1) * G00 * H(i+1,i)$$
 !! $$Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}$$
@@ -101,6 +104,10 @@ contains
         Gln(ii)%m = B
         deallocate (G00, GBB, sig, H10)
 !
+        finish = omp_get_wtime()
+        print *, "--- left contact took seconds", finish - start
+        start = finish
+        !
         allocate (A(M, M))
 ! inside device l -> r
         do ii = 2, nx - 1
@@ -127,7 +134,11 @@ contains
             call triMUL_c(Gl(ii)%m, B, Gl(ii)%m, A, 'n', 'n', 'c')
             Gln(ii)%m = A
         end do
-!
+        !
+        finish = omp_get_wtime()
+        print *, "--- first pass took seconds", finish - start
+        start = finish
+        !
 ! on the right contact
         ii = nx
         M = size(Hii(ii)%m, 1)
@@ -149,14 +160,14 @@ contains
 !
         call triMUL_c(H10, G00, H10, sigmar, 'c', 'n', 'n')
 !
-!$omp critical
-        open (unit=10, file='sancho_g00.dat', position='append')
-        write (10, *) En, 1, -aimag(trace(G00))
-        close (10)
-        open (unit=10, file='sancho_gbb.dat', position='append')
-        write (10, *) En, 1, -aimag(trace(Gbb))
-        close (10)
-!$omp end critical
+!!!$omp critical
+!!        open (unit=10, file='sancho_g00.dat', position='append')
+!!        write (10, *) En, 1, -aimag(trace(G00))
+!!        close (10)
+!!        open (unit=10, file='sancho_gbb.dat', position='append')
+!!        write (10, *) En, 1, -aimag(trace(Gbb))
+!!        close (10)
+!!!$omp end critical
 !
         call triMUL_c(H1i(nx)%m, Gl(nx - 1)%m, H1i(nx)%m, B, 'n', 'n', 'c')
         A = z*Sii(ii)%m - H00 - B - sigmar
@@ -192,6 +203,11 @@ contains
         deallocate (sigmar, sig, G00, GBB, H10)
         allocate (GN0(M, M))
 !
+        !
+        finish = omp_get_wtime()
+        print *, "--- right contact took seconds", finish - start
+        start = finish
+        !
 ! inside device r -> l
         do ii = nx - 1, 1, -1
             M = size(Hii(ii)%m, 1)
@@ -232,6 +248,11 @@ contains
 !! $$G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]$$
             G_greater(ii)%m = G_lesser(ii)%m + (G_r(ii)%m - transpose(conjg(G_r(ii)%m)))
         end do
+        !
+        finish = omp_get_wtime()
+        print *, "--- second pass took seconds", finish - start
+        start = finish
+        !
         ii = 1
 ! on the left contact
         A = -(sigmal - transpose(conjg(sigmal)))*ferm((En - mur)/(BOLTZ*TEMPr))
@@ -244,7 +265,7 @@ contains
         end do
         tre = tim
         deallocate (B, A, C, GN0, sigmal)
-!
+!           
     end subroutine rgf_variableblock_forward
 
 !!  Recursive Backward Green's solver
@@ -279,14 +300,14 @@ contains
         !
         H00 = Hii(ii)%m + B
         call sancho(M, En, Sii(ii)%m, H00, H1i(ii + 1)%m, G00, GBB)
-        !$omp critical
-        open (unit=10, file='sancho_g00.dat', position='append')
-        write (10, *) En, 2, -aimag(trace(G00))
-        close (10)
-        open (unit=10, file='sancho_gbb.dat', position='append')
-        write (10, *) En, 2, -aimag(trace(Gbb))
-        close (10)
-        !$omp end critical
+!!        !$omp critical
+!!        open (unit=10, file='sancho_g00.dat', position='append')
+!!        write (10, *) En, 2, -aimag(trace(G00))
+!!        close (10)
+!!        open (unit=10, file='sancho_gbb.dat', position='append')
+!!        write (10, *) En, 2, -aimag(trace(Gbb))
+!!        close (10)
+!!        !$omp end critical
         !
         !! $$\Sigma^R = H(i,i+1) * G00 * H(i+1,i)$$
         !! $$Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}$$
@@ -352,14 +373,14 @@ contains
         !
         call triMUL_c(H1i(1)%m, G00, H1i(1)%m, sigmal, 'c', 'n', 'n')
         !
-        !$omp critical
-        open (unit=10, file='sancho_g00.dat', position='append')
-        write (10, *) En, 1, -aimag(trace(G00))
-        close (10)
-        open (unit=10, file='sancho_gbb.dat', position='append')
-        write (10, *) En, 1, -aimag(trace(Gbb))
-        close (10)
-        !$omp end critical
+!!        !$omp critical
+!!        open (unit=10, file='sancho_g00.dat', position='append')
+!!        write (10, *) En, 1, -aimag(trace(G00))
+!!        close (10)
+!!        open (unit=10, file='sancho_gbb.dat', position='append')
+!!        write (10, *) En, 1, -aimag(trace(Gbb))
+!!        close (10)
+!!        !$omp end critical
         !
         call triMUL_c(H1i(2)%m, Gl(2)%m, H1i(2)%m, B, 'n', 'n', 'c')
         A = z*Sii(1)%m - H00 - B - sigmal
@@ -460,6 +481,7 @@ contains
 !!  Sancho-Rubio
     subroutine sancho(nm, E, S00, H00, H10, G00, GBB)
         use linalg, only: invert
+        
         integer i, j, k, nm, nmax
         COMPLEX(dp) :: z
         real(dp) :: E, error
@@ -471,6 +493,7 @@ contains
         COMPLEX(dp), EXTERNAL :: ZLANGE
         complex(dp), parameter :: alpha = cmplx(1.0d0, 0.0d0)
         complex(dp), parameter :: beta = cmplx(0.0d0, 0.0d0)
+        character*1 :: transa, transb
         !
         Allocate (H_BB(nm, nm))
         Allocate (H_SS(nm, nm))
@@ -483,7 +506,7 @@ contains
         Allocate (tmp(nm, nm))
         nmax = 50
         z = dcmplx(E, 1.0d-5)
-        Id = 0.0d0
+        Id = dcmplx(0.0d0,0.0d0)
         tmp = 0.0d0
         do i = 1, nm
             Id(i, i) = 1.0d0
@@ -493,19 +516,21 @@ contains
         H_10 = H10
         H_01 = TRANSPOSE(CONJG(H_10))
         H_SS = H00
+        transa='n'
+        transb='n'
         do i = 1, nmax
             A = z*S00 - H_BB
             call invert(A, nm)
-            call zgemm('n', 'n', nm, nm, nm, alpha, A, nm, H_10, nm, beta, B, nm)
-            call zgemm('n', 'n', nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, A, nm, H_10, nm, beta, B, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
             H_SS = H_SS + C
             H_BB = H_BB + C
-            call zgemm('n', 'n', nm, nm, nm, alpha, H_10, nm, B, nm, beta, C, nm)
-            call zgemm('n', 'n', nm, nm, nm, alpha, A, nm, H_01, nm, beta, B, nm)
-            call zgemm('n', 'n', nm, nm, nm, alpha, H_10, nm, B, nm, beta, A, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_10, nm, B, nm, beta, C, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, A, nm, H_01, nm, beta, B, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_10, nm, B, nm, beta, A, nm)
             H_10 = C
             H_BB = H_BB + A
-            call zgemm('n', 'n', nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
+            call Zgemm(transa, transb, nm, nm, nm, alpha, H_01, nm, B, nm, beta, C, nm)
             H_01 = C
             ! NORM --> inspect the diagonal of A
             error = 0.0d0

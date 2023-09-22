@@ -41,8 +41,10 @@ contains
     subroutine negf_solve(nx, nen, nk, emin, emax, Hii, H1i, Sii, temp, mu, &
                           comm_size, comm_rank, local_NE, first_local_energy, nbnd, nslab, Lx)
         use matrix_c, only: type_matrix_complex, malloc, free, sizeof
-        use rgf_mod, only: rgf_variableblock_forward
+        use cuda_rgf_mod, only: cuda_rgf_variableblock_forward, cuda_rgf_constblocksize,cuda_rgf_init,cuda_rgf_finish
+        ! use rgf_mod, only: rgf_variableblock_forward
         use Output, only: write_spectrum_summed_over_k
+        use omp_lib
         type(type_matrix_complex), intent(in), dimension(nx, nk)::Hii, Sii
         type(type_matrix_complex), intent(in), dimension(nx + 1, nk)::H1i
         integer(kind=4), intent(in) :: comm_size, comm_rank, local_NE, first_local_energy
@@ -61,14 +63,14 @@ contains
         real(dp)::en(nen), dE, local_energies(local_NE)
         real(dp), dimension(:, :), allocatable::mul, mur, templ, tempr
         type(type_matrix_complex), dimension(nx, local_NE, nk)::sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater
-        type(type_matrix_complex), dimension(nx)::Jdens, Gl, Gln
+        type(type_matrix_complex), dimension(:),allocatable::Jdens, Gl, Gln
         real(dp), dimension(nen, nk)::tr, tre
         character(len=20) :: filename
         character(len=8) :: fmt
         character(len=4) :: rank_str
         logical::append
         !
-        include "mpif.h"
+    !    include "mpif.h"
         fmt = '(I4.4)'
         write (rank_str, fmt) comm_rank
         append = (comm_rank /= 0)
@@ -90,12 +92,9 @@ contains
                 call malloc(G_greater(:, ie, ik), nx, nm)
             end do
         end do
-        call malloc(Jdens, nx, nm)
-        call malloc(Gl, nx, nm)
-        call malloc(Gln, nx, nm)
         !
         if (comm_rank == 0) then
-            print *, 'allocate memory done'
+            print *, 'allocate memory DONE'
         end if
         !
         dE = (emax - emin)/dble(nen - 1)
@@ -105,21 +104,38 @@ contains
         end do
         !
         iter = 0
-        do ik = 1, nk
-            !!!$omp parallel default(shared) private(ie)
-            !!!$omp do
-            do ie = 1, local_NE
-                call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
-                                               Hii(:, ik), H1i(:, ik), Sii(:, ik), sigma_lesser_ph(:, ie, ik), &
-                                               sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
-                                               Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
-            end do
-            !!!$omp end do
-            !!!$omp end parallel
-        end do
         !
-        NS = 3
-        NB = 32
+        !$omp parallel default(shared) private(ie,ik,Jdens,Gl,Gln)
+        allocate(Jdens(nx),Gl(nx),Gln(nx))        
+        call malloc(Jdens, nx, nm)
+        ! call malloc(Gl, nx, nm)
+        ! call malloc(Gln, nx, nm)        
+        call cuda_rgf_init(nm(1,1))
+        !!$omp do        
+        do ie = 1, local_NE
+            do ik = 1, nk
+                !  call rgf_variableblock_forward(nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
+                !      Hii(:, ik), H1i(:, ik), Sii(:, ik), sigma_lesser_ph(:, ie, ik), &
+                !      sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
+                !      Jdens, Gl, Gln, tr(ie, ik), tre(ie, ik))
+
+               call cuda_rgf_constblocksize(nm(1,1), nx, local_energies(ie), mul, mur, TEMPl, TEMPr, &
+                   Hii(:, ik), H1i(:, ik), Sii(:, ik), sigma_lesser_ph(:, ie, ik), &
+                   sigma_r_ph(:, ie, ik), G_r(:, ie, ik), G_lesser(:, ie, ik), G_greater(:, ie, ik), &
+                   Jdens, tr(ie, ik), tre(ie, ik))    
+            end do
+        end do        
+        !!$omp end do
+        call cuda_rgf_finish()
+        call free(Jdens)
+        ! call free(Gl)
+        ! call free(Gln)
+        deallocate(Jdens)
+        ! deallocate(Gl,Gln)
+        !$omp end parallel
+        !
+        NB=nbnd
+        NS=nslab
         do i = 0, comm_size - 1
             if (i == comm_rank) then
                 filename = 'ldos'
@@ -132,7 +148,7 @@ contains
                 call write_spectrum_summed_over_k(filename, iter, G_greater, local_NE, local_energies, &
                                                   nk, nx, NB, NS, Lx, (/1.0d0, -1.0d0/), append)
             end if
-            call MPI_Barrier(MPI_COMM_WORLD, ierr)
+!            call MPI_Barrier(MPI_COMM_WORLD, ierr)
         end do
         !
         if (comm_rank == 0) then
@@ -145,9 +161,6 @@ contains
         call free(G_r)
         call free(G_lesser)
         call free(G_greater)
-        call free(Jdens)
-        call free(Gl)
-        call free(Gln)
         !
     end subroutine negf_solve
 

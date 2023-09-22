@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="A Fortran90 package to simulate transport physics in nanoscale devices.">
+    <meta name="author" content="Jiang Cao" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>cuda_rgf_variableblock_forward &ndash; Quantum transport simulator</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+      <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+         <script src="../js/jquery-2.1.3.min.js"></script>
+         <script src="../js/svg-pan-zoom.min.js"></script>
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">Quantum transport simulator </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown hidden-xs visible-sm visible-md hidden-lg">
+              <a href="#" class="dropdown-toggle"
+                 data-toggle="dropdown" role="button"
+                 aria-haspopup="true"
+                 aria-expanded="false">
+                 Contents <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                    <li><a href="../lists/files.html">Source Files</a></li>
+                  <li><a href="../lists/modules.html">Modules</a></li>
+                  <li><a href="../lists/procedures.html">Procedures</a></li>
+                  <li><a href="../lists/types.html">Derived Types</a></li>
+                  <li><a href="../lists/programs.html">Programs</a></li>
+              </ul>
+            </li>
+                <li class="visible-xs hidden-sm visible-lg">
+                  <a href="../lists/files.html">Source Files</a>
+                </li>
+              <li class="visible-xs hidden-sm visible-lg">
+                <a href="../lists/modules.html">Modules</a>
+              </li>
+              <li class="visible-xs hidden-sm visible-lg">
+                <a href="../lists/procedures.html">Procedures</a>
+              </li>
+              <li class="visible-xs hidden-sm visible-lg">
+                <a href="../lists/types.html">Derived Types</a>
+              </li>
+              <li class="visible-xs hidden-sm visible-lg">
+                <a href="../lists/programs.html">Programs</a>
+              </li>
+          </ul>
+            <form action="../search.html" class="navbar-form navbar-right" role="search">
+              <div class="form-group">
+                <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+              </div>
+              <!--
+                  <button type="submit" class="btn btn-default">Submit</button>
+                  -->
+            </form>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+  <div class="row">
+    <h1>cuda_rgf_variableblock_forward
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="row" id="info-bar">
+    <div class="col-lg-12">
+      <div class="well well-sm">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+          <li id="statements"><i class="fa fa-list-ol"></i>
+            <a data-toggle="tooltip"
+               data-placement="bottom" data-html="true"
+               title=" 4.7% of total for procedures.">131 statements</a>
+          </li>
+
+            <li id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/cuda_rgf_mod.f90"> Source File</a>
+            </li>
+        </ul>
+        <ol class="breadcrumb in-well text-right">
+              <li><a href='../sourcefile/cuda_rgf_mod.f90.html'>cuda_rgf_mod.f90</a></li>
+              <li><a href='../module/cuda_rgf_mod.html'>cuda_rgf_mod</a></li>
+          <li class="active">cuda_rgf_variableblock_forward</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <script>
+    $(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="panel panel-primary">
+      <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/cuda_rgf_variableblock_forward.html#src">cuda_rgf_variableblock_forward</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  subroutine cuda_rgf_variableblock_forward(nx, En, mul, mur, TEMPl, TEMPr, Hii, H1i, Sii, sigma_lesser_ph, sigma_r_ph, G_r, G_lesser, G_greater, Jdens, Gl, Gln, tr, tre)  
+</h2>
+    
+
+    <p>
+<script type="math/tex; mode=display">H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)</script>
+!$omp critical
+        open (unit=10, file='sancho_g00.dat', position='append')
+        write (10, <em>) En, 2, -aimag(trace(G00))
+        close (10)
+        open (unit=10, file='sancho_gbb.dat', position='append')
+        write (10, </em>) En, 2, -aimag(trace(Gbb))
+        close (10)
+!$omp end critical</p>
+<p>
+<script type="math/tex; mode=display">\Sigma^R = H(i,i+1) * G00 * H(i+1,i)</script>
+<script type="math/tex; mode=display">Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}</script>
+<script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + (-(\Sigma^R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger</script>
+<script type="math/tex; mode=display">H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)</script>
+<script type="math/tex; mode=display">Gl(i) = [E*S(i,i) - H00 - H(i,i-1) * Gl(i-1) * H(i-1,i)]^{-1}</script>
+<script type="math/tex; mode=display">Gln(i) = Gl(i) * [\Sigma_{ph}^<(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger</script>
+!$omp critical
+        open (unit=10, file='sancho_g00.dat', position='append')
+        write (10, <em>) En, 1, -aimag(trace(G00))
+        close (10)
+        open (unit=10, file='sancho_gbb.dat', position='append')
+        write (10, </em>) En, 1, -aimag(trace(Gbb))
+        close (10)
+!$omp end critical</p>
+<p>
+<script type="math/tex; mode=display">\Sigma^< = \Sigma_11^< + \Sigma_{ph}^< + \Sigma_s^<</script>
+<script type="math/tex; mode=display">G^< = G * \Sigma^< * G^\dagger</script>
+<script type="math/tex; mode=display">A = G^<(i+1) * H(i+1,i) * Gl(i)^\dagger + G(i+1) * H(i+1,i) * Gln(i)</script>
+<script type="math/tex; mode=display">B = H(i,i+1) * A</script>
+<script type="math/tex; mode=display">Jdens(i) = -2 * B</script>
+<script type="math/tex; mode=display">GN0 = Gl(i) * H(i,i+1) * G(i+1)</script>
+<script type="math/tex; mode=display">G(i) = Gl(i) + GN0 * H(i+1,i) * Gl(i)</script>
+<script type="math/tex; mode=display">G^<(i) = Gln(i) + Gl(i) * H(i,i+1) * G^<(i+1) * H(i+1,i) *Gl(i)^\dagger</script>
+<script type="math/tex; mode=display">G^<(i) = G^<(i) + GN0 * H(i+1,i) * Gln(i)</script>
+<script type="math/tex; mode=display">G^<(i) = G^<(i) + Gln(i) * H(i,i+1) * GN0</script>
+<script type="math/tex; mode=display">G^>(i) = G^<(i) + [G(i) - G(i)^\dagger]</script>
+</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nx~3"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nx</strong></td>
+            <td>
+                <p>lenght of the device</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-en~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>En</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mul~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mul</strong>(:,:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mur~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mur</strong>(:,:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-templ~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>TEMPl</strong>(:,:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-tempr~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>TEMPr</strong>(:,:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-hii~5"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Hii</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-h1i~5"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>H1i</strong>(nx+1)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sii~5"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Sii</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sigma_lesser_ph~2"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sigma_lesser_ph</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sigma_r_ph~2"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sigma_r_ph</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-g_r~2"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>G_r</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-g_lesser~2"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>G_lesser</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-g_greater~2"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>G_greater</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-jdens~2"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Jdens</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-gl"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Gl</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-gln"></span>
+              type(<a href='../type/type_matrix_complex.html'>type_matrix_complex</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Gln</strong>(nx)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-tr~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>tr</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-tre~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>tre</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+
+    <section class="visible-xs visible-sm hidden-md">
+        <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="panel panel-primary">
+      <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/cuda_rgf_variableblock_forward.html#src">cuda_rgf_variableblock_forward</a>
+      </div>
+    </div>
+
+
+    </section>
+    <br class="visible-xs visible-sm hidden-md">
+
+
+    
+    
+
+    
+    
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">cuda_rgf_variableblock_forward</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="w"> </span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="n">mul</span><span class="p">,</span><span class="w"> </span><span class="n">mur</span><span class="p">,</span><span class="w"> </span><span class="n">TEMPl</span><span class="p">,</span><span class="w"> </span><span class="n">TEMPr</span><span class="p">,</span><span class="w"> </span><span class="n">Hii</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">,</span><span class="w"> </span><span class="n">sigma_lesser_ph</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                         </span><span class="n">sigma_r_ph</span><span class="p">,</span><span class="w"> </span><span class="n">G_r</span><span class="p">,</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">,</span><span class="w"> </span><span class="n">G_greater</span><span class="p">,</span><span class="w"> </span><span class="n">Jdens</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">,</span><span class="w"> </span><span class="n">tr</span><span class="p">,</span><span class="w"> </span><span class="n">tre</span><span class="p">)</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">Hii</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">nx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">sigma_lesser_ph</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">sigma_r_ph</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w">       </span><span class="kd">::</span><span class="w"> </span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="n">mul</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">mur</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">TEMPr</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">TEMPl</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="c">!! lenght of the device</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">type_matrix_complex</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="kd">::</span><span class="w"> </span><span class="n">G_greater</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">G_r</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">Jdens</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span><span class="w"> </span><span class="n">Gln</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w">      </span><span class="kd">::</span><span class="w"> </span><span class="n">tr</span><span class="p">,</span><span class="w"> </span><span class="n">tre</span>
+<span class="c">!---- local variables</span>
+<span class="w">        </span><span class="kt">integer</span><span class="w">    </span><span class="kd">::</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span>
+<span class="w">        </span><span class="kt">complex</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">z</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w">    </span><span class="kd">::</span><span class="w"> </span><span class="n">tim</span>
+<span class="w">        </span><span class="kt">complex</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sig</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">H00</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">H10</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">        </span><span class="kt">complex</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">A</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">B</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">C</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">G00</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">GBB</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">sigmar</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">sigmal</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">GN0</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="c">!!!$omp declare target device_type(any)</span>
+<span class="w">        </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dcmplx</span><span class="p">(</span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0d0</span><span class="p">)</span>
+<span class="c">!</span>
+<span class="c">! on the left contact</span>
+<span class="w">        </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">        </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">H00</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">H10</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">G00</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">GBB</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">sigmal</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">sig</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="c">!</span>
+<span class="c">!! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">sigma_r_ph</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="n">H00</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">B</span>
+<span class="w">        </span><span class="n">H10</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span>
+<span class="w">        </span><span class="k">call </span><span class="n">sancho</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H00</span><span class="p">,</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">H10</span><span class="p">)),</span><span class="w"> </span><span class="n">G00</span><span class="p">,</span><span class="w"> </span><span class="n">GBB</span><span class="p">)</span>
+
+<span class="c">!!!$omp critical</span>
+<span class="c">!!        open (unit=10, file=&#39;sancho_g00.dat&#39;, position=&#39;append&#39;)</span>
+<span class="c">!!        write (10, *) En, 2, -aimag(trace(G00))</span>
+<span class="c">!!        close (10)</span>
+<span class="c">!!        open (unit=10, file=&#39;sancho_gbb.dat&#39;, position=&#39;append&#39;)</span>
+<span class="c">!!        write (10, *) En, 2, -aimag(trace(Gbb))</span>
+<span class="c">!!        close (10)</span>
+<span class="c">!!!$omp end critical</span>
+
+<span class="c">!! $$\Sigma^R = H(i,i+1) * G00 * H(i+1,i)$$</span>
+<span class="c">!! $$Gl(i) = [E*S(i,i) - H00 - \Sigma_R]^{-1}$$</span>
+<span class="w">        </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">H10</span><span class="p">,</span><span class="w"> </span><span class="n">G00</span><span class="p">,</span><span class="w"> </span><span class="n">H10</span><span class="p">,</span><span class="w"> </span><span class="n">sigmal</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="o">*</span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">H00</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sigmal</span>
+<span class="w">        </span><span class="k">call </span><span class="n">invert</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">)</span>
+<span class="w">        </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B</span>
+<span class="c">!</span>
+<span class="c">!! $$Gln(i) = Gl(i) * [\Sigma_{ph}^&lt;(i)*S(i,i) + (-(\Sigma^R - \Sigma_R^\dagger)*ferm(..))] * Gl(i)^\dagger$$</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">sigma_lesser_ph</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">        </span><span class="n">sig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">sigmal</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">sigmal</span><span class="p">)))</span><span class="o">*</span><span class="n">ferm</span><span class="p">((</span><span class="n">En</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mur</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">BOLTZ</span><span class="o">*</span><span class="n">TEMPr</span><span class="p">))</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="n">sig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sig</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">B</span>
+<span class="w">        </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">sig</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B</span>
+<span class="w">        </span><span class="k">deallocate</span><span class="w"> </span><span class="p">(</span><span class="n">G00</span><span class="p">,</span><span class="w"> </span><span class="n">GBB</span><span class="p">,</span><span class="w"> </span><span class="n">sig</span><span class="p">,</span><span class="w"> </span><span class="n">H10</span><span class="p">)</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">A</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="c">! inside device l -&gt; r</span>
+<span class="w">        </span><span class="k">do </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">H00</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="n">ne</span><span class="p">.</span><span class="w"> </span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                deallocate</span><span class="w"> </span><span class="p">(</span><span class="n">H00</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">)</span>
+<span class="w">                </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">H00</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">                </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">A</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">            </span><span class="k">end if</span>
+<span class="k">            call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">sigma_r_ph</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">            </span><span class="n">H00</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">B</span>
+<span class="c">!</span>
+<span class="c">!! $$H00 = H(i,i) + \Sigma_{ph}(i) * S(i,i)$$</span>
+<span class="c">!! $$Gl(i) = [E*S(i,i) - H00 - H(i,i-1) * Gl(i-1) * H(i-1,i)]^{-1}$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="o">*</span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">H00</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">B</span>
+<span class="w">            </span><span class="k">call </span><span class="n">invert</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">)</span>
+<span class="w">            </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span>
+<span class="c">!</span>
+<span class="c">!! $$Gln(i) = Gl(i) * [\Sigma_{ph}^&lt;(i)*S(i,i) + H(i,i+1)*Gln(i+1)*H(i+1,i)] * Gl(i)^\dagger$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">sigma_lesser_ph</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">)</span>
+<span class="w">            </span><span class="n">B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">A</span>
+<span class="w">            </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span>
+<span class="w">        </span><span class="k">end do</span>
+<span class="c">!</span>
+<span class="c">! on the right contact</span>
+<span class="w">        </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span>
+<span class="w">        </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">H10</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">G00</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">GBB</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">sig</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">sigmar</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">H00</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="n">ne</span><span class="p">.</span><span class="w"> </span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            deallocate</span><span class="w"> </span><span class="p">(</span><span class="n">H00</span><span class="p">)</span>
+<span class="w">            </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">H00</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="w">        </span><span class="k">end if</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">sigma_r_ph</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">        </span><span class="n">H00</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">B</span>
+<span class="w">        </span><span class="n">H10</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">nx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="k">call </span><span class="n">sancho</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">En</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H00</span><span class="p">,</span><span class="w"> </span><span class="n">H10</span><span class="p">,</span><span class="w"> </span><span class="n">G00</span><span class="p">,</span><span class="w"> </span><span class="n">GBB</span><span class="p">)</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">H10</span><span class="p">,</span><span class="w"> </span><span class="n">G00</span><span class="p">,</span><span class="w"> </span><span class="n">H10</span><span class="p">,</span><span class="w"> </span><span class="n">sigmar</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+<span class="c">!!!$omp critical</span>
+<span class="c">!!        open (unit=10, file=&#39;sancho_g00.dat&#39;, position=&#39;append&#39;)</span>
+<span class="c">!!        write (10, *) En, 1, -aimag(trace(G00))</span>
+<span class="c">!!        close (10)</span>
+<span class="c">!!        open (unit=10, file=&#39;sancho_gbb.dat&#39;, position=&#39;append&#39;)</span>
+<span class="c">!!        write (10, *) En, 1, -aimag(trace(Gbb))</span>
+<span class="c">!!        close (10)</span>
+<span class="c">!!!$omp end critical</span>
+
+<span class="w">        </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">H1i</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">nx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="o">*</span><span class="n">Sii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">H00</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sigmar</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="k">call </span><span class="n">invert</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">)</span>
+<span class="w">        </span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span>
+<span class="w">        </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span>
+<span class="c">!</span>
+<span class="c">!! $$\Sigma^&lt; = \Sigma_11^&lt; + \Sigma_{ph}^&lt; + \Sigma_s^&lt;$$</span>
+<span class="w">        </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">H1i</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">(</span><span class="n">nx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">sigma_lesser_ph</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Sii</span><span class="p">(</span><span class="n">nx</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">)</span>
+<span class="w">        </span><span class="n">sig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">sigmar</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">sigmar</span><span class="p">)))</span><span class="o">*</span><span class="n">ferm</span><span class="p">((</span><span class="n">En</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mul</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">BOLTZ</span><span class="o">*</span><span class="n">TEMPl</span><span class="p">))</span>
+<span class="w">        </span><span class="n">sig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sig</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">B</span>
+<span class="c">!</span>
+<span class="c">!! $$G^&lt; = G * \Sigma^&lt; * G^\dagger$$</span>
+<span class="w">        </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">sig</span><span class="p">,</span><span class="w"> </span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B</span>
+<span class="w">        </span><span class="n">G_greater</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">)))</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">sigmar</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">sigmar</span><span class="p">)))</span><span class="o">*</span><span class="n">ferm</span><span class="p">((</span><span class="n">En</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mul</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">BOLTZ</span><span class="o">*</span><span class="n">TEMPl</span><span class="p">))</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">G_greater</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">        </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">sigmar</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">sigmar</span><span class="p">)))</span><span class="o">*</span><span class="p">(</span><span class="n">ferm</span><span class="p">((</span><span class="n">En</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mul</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">BOLTZ</span><span class="o">*</span><span class="n">TEMPl</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1.0d0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="n">Jdens</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">C</span>
+<span class="c">!</span>
+<span class="w">        </span><span class="n">tim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0d0</span>
+<span class="w">        </span><span class="k">do </span><span class="n">jj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">M</span>
+<span class="w">            </span><span class="n">tim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tim</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">dble</span><span class="p">(</span><span class="n">Jdens</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">(</span><span class="n">jj</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">))</span>
+<span class="w">        </span><span class="k">end do</span>
+<span class="k">        </span><span class="n">tr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tim</span><span class="w"> </span><span class="c">! transmission</span>
+<span class="w">        </span><span class="k">deallocate</span><span class="w"> </span><span class="p">(</span><span class="n">sigmar</span><span class="p">,</span><span class="w"> </span><span class="n">sig</span><span class="p">,</span><span class="w"> </span><span class="n">G00</span><span class="p">,</span><span class="w"> </span><span class="n">GBB</span><span class="p">,</span><span class="w"> </span><span class="n">H10</span><span class="p">)</span>
+<span class="w">        </span><span class="k">allocate</span><span class="w"> </span><span class="p">(</span><span class="n">GN0</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">))</span>
+<span class="c">!</span>
+<span class="c">! inside device r -&gt; l</span>
+<span class="w">        </span><span class="k">do </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span>
+<span class="w">            </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">Hii</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="c">!! $$A = G^&lt;(i+1) * H(i+1,i) * Gl(i)^\dagger + G(i+1) * H(i+1,i) * Gln(i)$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">triMUL_c</span><span class="p">(</span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">B</span>
+<span class="c">!! $$B = H(i,i+1) * A$$</span>
+<span class="c">!! $$Jdens(i) = -2 * B$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">            </span><span class="n">Jdens</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">2.0d0</span><span class="o">*</span><span class="n">B</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="c">!</span>
+<span class="c">!! $$GN0 = Gl(i) * H(i,i+1) * G(i+1)$$</span>
+<span class="c">!! $$G(i) = Gl(i) + GN0 * H(i+1,i) * Gl(i)$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">GN0</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">GN0</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">)</span>
+<span class="w">            </span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">A</span>
+<span class="c">!</span>
+<span class="c">!! $$G^&lt;(i) = Gln(i) + Gl(i) * H(i,i+1) * G^&lt;(i+1) * H(i+1,i) *Gl(i)^\dagger$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">Gl</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="w">            </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">C</span>
+<span class="c">!</span>
+<span class="c">!! $$G^&lt;(i) = G^&lt;(i) + GN0 * H(i+1,i) * Gln(i)$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">GN0</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="w">            </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">C</span>
+<span class="c">!</span>
+<span class="c">!! $$G^&lt;(i) = G^&lt;(i) + Gln(i) * H(i,i+1) * GN0$$</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">Gln</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">H1i</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">GN0</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="w">            </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">C</span>
+<span class="c">!</span>
+<span class="c">!! $$G^&gt;(i) = G^&lt;(i) + [G(i) - G(i)^\dagger]$$</span>
+<span class="w">            </span><span class="n">G_greater</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">G_r</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">)))</span>
+<span class="w">        </span><span class="k">end do</span>
+<span class="k">        </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="c">! on the left contact</span>
+<span class="w">        </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">sigmal</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">sigmal</span><span class="p">)))</span><span class="o">*</span><span class="n">ferm</span><span class="p">((</span><span class="n">En</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mur</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">BOLTZ</span><span class="o">*</span><span class="n">TEMPr</span><span class="p">))</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">G_greater</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">)</span>
+<span class="w">        </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">sigmal</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">transpose</span><span class="p">(</span><span class="nb">conjg</span><span class="p">(</span><span class="n">sigmal</span><span class="p">)))</span><span class="o">*</span><span class="p">(</span><span class="n">ferm</span><span class="p">((</span><span class="n">En</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mur</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">BOLTZ</span><span class="o">*</span><span class="n">TEMPr</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1.0d0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">MUL_c</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">G_lesser</span><span class="p">(</span><span class="n">ii</span><span class="p">)%</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">)</span>
+<span class="w">        </span><span class="n">tim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0d0</span>
+<span class="w">        </span><span class="k">do </span><span class="n">jj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">M</span>
+<span class="w">            </span><span class="n">tim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tim</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">dble</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">jj</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">C</span><span class="p">(</span><span class="n">jj</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">))</span>
+<span class="w">        </span><span class="k">end do</span>
+<span class="k">        </span><span class="n">tre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tim</span>
+<span class="w">        </span><span class="k">deallocate</span><span class="w"> </span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">GN0</span><span class="p">,</span><span class="w"> </span><span class="n">sigmal</span><span class="p">)</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">end subroutine </span><span class="n">cuda_rgf_variableblock_forward</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-6 col-md-6"><p>Quantum transport simulator was developed by Jiang Cao<br>&copy; 2023 
+</p>
+          </div>
+          <div class="col-xs-6 col-md-6">
+            <p class="text-right">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+         ================================================== -->
+         <!-- Placed at the end of the document so the pages load faster -->
+    <!--
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        -->
+        <script src="../js/bootstrap.min.js"></script>
+        <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+        <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+        <!-- MathJax JavaScript
+             ================================================== -->
+             <!-- Placed at the end of the document so the pages load faster -->
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+          TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+          jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+          extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']
+          });
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+          <script src="../tipuesearch/tipuesearch_content.js"></script>
+          <script src="../tipuesearch/tipuesearch_set.js"></script>
+          <script src="../tipuesearch/tipuesearch.js"></script>
+
+  </body>
+</html>
