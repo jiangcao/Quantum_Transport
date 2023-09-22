@@ -70,7 +70,7 @@ contains
         character(len=4) :: rank_str
         logical::append
         !
-!        include "mpif.h"
+    !    include "mpif.h"
         fmt = '(I4.4)'
         write (rank_str, fmt) comm_rank
         append = (comm_rank /= 0)
@@ -108,8 +108,8 @@ contains
         !$omp parallel default(shared) private(ie,ik,Jdens,Gl,Gln)
         allocate(Jdens(nx),Gl(nx),Gln(nx))        
         call malloc(Jdens, nx, nm)
-        call malloc(Gl, nx, nm)
-        call malloc(Gln, nx, nm)        
+        ! call malloc(Gl, nx, nm)
+        ! call malloc(Gln, nx, nm)        
         call cuda_rgf_init(nm(1,1))
         !!$omp do        
         do ie = 1, local_NE
@@ -128,9 +128,10 @@ contains
         !!$omp end do
         call cuda_rgf_finish()
         call free(Jdens)
-        call free(Gl)
-        call free(Gln)
-        deallocate(Jdens,Gl,Gln)
+        ! call free(Gl)
+        ! call free(Gln)
+        deallocate(Jdens)
+        ! deallocate(Gl,Gln)
         !$omp end parallel
         !
         NB=nbnd
